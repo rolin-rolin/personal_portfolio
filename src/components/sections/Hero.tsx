@@ -61,7 +61,7 @@ export default function Hero() {
         animate="show"
       >
         {TITLE_WORDS.map((word) => (
-          <div key={word} className="overflow-hidden">
+          <div key={word} className="overflow-hidden pb-3">
             <motion.h1
               className="text-[clamp(4rem,12vw,10rem)] font-semibold leading-[0.9] tracking-tight"
               variants={wordVariant}
