@@ -1,0 +1,71 @@
+.root {
+  position: relative;
+  overflow: hidden;
+  display: block;
+}
+
+.banner {
+  animation:
+    blur-reveal-clip var(--duration-clip) cubic-bezier(0.16, 1, 0.3, 1) both,
+    blur-reveal-unblur var(--duration) cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes blur-reveal-clip {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0% 0 0);
+  }
+}
+
+@keyframes blur-reveal-unblur {
+  from {
+    filter: blur(var(--blur));
+  }
+  to {
+    filter: blur(0px);
+  }
+}
+
+.blur {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(var(--blur));
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 20%,
+    black 80%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 20%,
+    black 80%,
+    transparent 100%
+  );
+  animation: blur-reveal-sweep var(--duration-clip) cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform: translateX(-100%);
+  will-change: transform;
+}
+
+@keyframes blur-reveal-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.noise {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}

@@ -28,8 +28,7 @@ export function lerp(start: number, end: number, factor: number): number {
   return start + (end - start) * factor;
 }
 
-export default function LineMinimap() {
-  const scrollX = useScrollXFromWheel(MAX);
+export default function LineMinimap({ scrollX }: { scrollX: MotionValue<number> }) {
   const { mouseX, onMouseMove, onMouseLeave } = useMouseX();
 
   return (
@@ -182,6 +181,8 @@ export function useScrollXFromWheel(max: number) {
 
   React.useEffect(() => {
     function handleWheel(e: WheelEvent) {
+      if (e.defaultPrevented) return;
+
       const { deltaX, deltaY } = e;
 
       if (!directionRef.current) {
