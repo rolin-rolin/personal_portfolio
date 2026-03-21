@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, type Variants } from "motion/react";
 
 const TITLE_WORDS = ["Software", "Engineer"];
 const SUBTITLE = "Building things that move.";

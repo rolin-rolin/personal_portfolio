@@ -5,12 +5,14 @@ import {
   animate,
   motion,
   TargetAndTransition,
-  useMotionValue,
+  useMotionValueEvent,
   useSpring,
   useTransform,
+  type MotionValue,
 } from "motion/react";
 import { clamp } from "@/lib/clamp";
 import { useMobileDetect } from "@/lib/useMobileDetect";
+import { MAX } from "@/components/sections/LineMinimap";
 
 export const FRAME_WIDTH = 72;
 export const FRAME_WIDTH_EXPANDED = 480;
@@ -36,16 +38,30 @@ const BASE_FRAMES: [string, string][] = [
 ];
 
 const FRAMES = [...BASE_FRAMES, ...BASE_FRAMES, ...BASE_FRAMES, ...BASE_FRAMES];
-const STRIP_MAX = FRAME_STEP * (FRAMES.length - 1);
+export const STRIP_MAX = FRAME_STEP * (FRAMES.length - 1);
 
-export default function ScrollStrip() {
+export default function ScrollStrip({
+  pageScrollX,
+  translateX,
+}: {
+  pageScrollX: MotionValue<number>;
+  translateX: MotionValue<number>;
+}) {
   const detect = useMobileDetect();
   const isMobile = detect.isMobile();
 
   const [activeIndex, setActiveIndex] = React.useState<null | number>(null);
-  const translateX = useMotionValue(0);
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const wheelEndRef = React.useRef<ReturnType<typeof setTimeout>>();
+  const wheelEndRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // Reset selection the moment the page starts leaving this section.
+  // Watching the motion value directly is reliable for both wheel and minimap jumps.
+  useMotionValueEvent(pageScrollX, "change", (v) => {
+    if (v < MAX * 0.95) {
+      setActiveIndex(null);
+      translateX.set(0);
+    }
+  });
 
   // Keyboard navigation
   React.useEffect(() => {
