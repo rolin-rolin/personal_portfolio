@@ -6,8 +6,8 @@
 
 .banner {
   animation:
-    blur-reveal-clip var(--duration-clip) cubic-bezier(0.16, 1, 0.3, 1) both,
-    blur-reveal-unblur var(--duration) cubic-bezier(0.16, 1, 0.3, 1) both;
+    blur-reveal-clip var(--duration-clip) cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0ms) both,
+    blur-reveal-unblur var(--duration) cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0ms) both;
 }
 
 @keyframes blur-reveal-clip {
@@ -46,7 +46,7 @@
     black 80%,
     transparent 100%
   );
-  animation: blur-reveal-sweep var(--duration-clip) cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: blur-reveal-sweep var(--duration-clip) cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0ms) both;
   transform: translateX(-100%);
   will-change: transform;
 }

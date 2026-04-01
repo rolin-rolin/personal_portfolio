@@ -1,16 +1,18 @@
 import styles from "./BlurReveal.module.css";
 
 const DEFAULT_BLUR = 10;
-const DEFAULT_DURATION = 2000;
+const DEFAULT_DURATION = 3500;
 
 export function BlurReveal({
   children,
   duration = DEFAULT_DURATION,
   blur = DEFAULT_BLUR,
+  delay = 0,
 }: {
   children: React.ReactNode;
   blur?: number;
   duration?: number;
+  delay?: number;
 }) {
   return (
     <div
@@ -20,6 +22,7 @@ export function BlurReveal({
           "--duration-clip": duration + "ms",
           "--duration": duration + duration / 2 + "ms",
           "--blur": blur + "px",
+          "--delay": delay + "ms",
         } as React.CSSProperties
       }
     >

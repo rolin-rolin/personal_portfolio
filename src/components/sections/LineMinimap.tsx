@@ -104,6 +104,8 @@ function Line({
     const ref = React.useRef<HTMLDivElement>(null);
     const scaleY = useSpring(1, { damping: 45, stiffness: 600 });
     const centerX = index * LINE_STEP + LINE_WIDTH / 2;
+    const baseHeight = isSection ? LINE_HEIGHT_ACTIVE : LINE_HEIGHT;
+    const height = useSpring(baseHeight, { damping: 45, stiffness: 600 });
 
     useProximity(scaleY, {
         ref,
@@ -111,7 +113,16 @@ function Line({
         mouseX,
         scrollX,
         centerX,
+        intensity: isSection ? DEFAULT_INTENSITY * 0.6 : DEFAULT_INTENSITY,
         reset: false,
+    });
+
+    useMotionValueEvent(scrollX, "change", (latest) => {
+        if (!isSection) return;
+        const distance = Math.abs(latest - centerX);
+        const dampened = distance < DISTANCE_LIMIT;
+        const factor = dampened ? 1 - (1 - distance / DISTANCE_LIMIT) : 0;
+        height.set(baseHeight - 2 + factor * 2);
     });
 
     const colorClass = isSection ? "bg-(--accent)" : "bg-neutral-300";
@@ -122,7 +133,7 @@ function Line({
             className={colorClass}
             style={{
                 width: LINE_WIDTH,
-                height: isSection ? LINE_HEIGHT_ACTIVE : LINE_HEIGHT,
+                height,
                 scaleY,
             }}
         />

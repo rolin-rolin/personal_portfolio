@@ -55,7 +55,7 @@ export default function Home() {
         sections={SECTIONS}
         seekTo={seekTo}
       />
-      <motion.div className="flex h-full" style={{ x }}>
+      <motion.div className="flex h-full" style={{ x }} data-scroll-x-container>
         <div className="w-[100vw] h-full flex-shrink-0">
           <Hero />
         </div>
