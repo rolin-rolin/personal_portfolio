@@ -7,20 +7,24 @@ import { createPortal } from "react-dom";
 const GRAVITY        = 0.28;   // px/frame²
 const DRAG           = 0.991;  // velocity multiplier per frame (air resistance)
 const ELASTICITY     = 0.68;   // energy retained on wall bounce
-const FLOOR_FRICTION = 0.88;   // vx damping when bouncing off floor
+const FLOOR_FRICTION = 0.94;   // vx damping when bouncing off floor
 const BALL_MASS      = 1.4;    // divides cursor impulse (heavier = harder to redirect)
 const SPIN_DECAY     = 0.97;   // angular velocity decay per frame (in-air only)
 const BALL_RADIUS    = 16;
 const GAME_MS        = 60_000;
 const GOAL_RATIO     = 0.28;   // goal height as fraction of canvas height
 const GOAL_DEPTH     = 28;     // px the goal extends inward from right wall
-const MAX_BALL_AGE   = 9_000;  // ms before a stuck ball is respawned
 const MIN_SPEED      = 1.5;    // enforce minimum ball speed
 const GROUND_HEIGHT  = 22;     // px — grass strip at bottom (visual + physics floor)
 
 // Hard mode
 const GOALIE_RADIUS  = 18;     // px
 const GOALIE_LEAP_MS = 300;    // ms for leap arc animation
+
+// Goal celebration confetti
+const CONFETTI_COUNT  = 32;
+const CONFETTI_MS     = 1200;  // ms particles live
+const CONFETTI_COLORS = ["#ff4d00", "#ffaa00", "#ffffff", "#171717", "#ffd700"];
 
 type GameState = "idle" | "playing" | "gameover";
 
@@ -40,7 +44,15 @@ type Goalie = {
   leapFromY: number;
   leapToY: number;
   leapStartTime: number;
-  hasLeaped: boolean;
+};
+
+type Confetti = {
+  x: number; y: number;
+  vx: number; vy: number;
+  w: number; h: number;
+  angle: number; spin: number;
+  color: string;
+  born: number;
 };
 
 type Sample = { x: number; y: number; t: number };
@@ -97,7 +109,6 @@ function makeGoalie(cw: number, ch: number): Goalie {
     leapFromY: 0,
     leapToY: 0,
     leapStartTime: 0,
-    hasLeaped: false,
   };
 }
 
@@ -218,6 +229,36 @@ function resolveAABBCircle(ball: Ball, rect: PageRect) {
   ball.spin = ball.vx * 0.06; // reset to rolling spin, same formula as ground
 }
 
+function spawnConfetti(wallX: number, gTop: number, gBottom: number, now: number): Confetti[] {
+  const cy = (gTop + gBottom) / 2;
+  return Array.from({ length: CONFETTI_COUNT }, () => ({
+    x: wallX - 8 + Math.random() * 6,
+    y: cy + (Math.random() - 0.5) * (gBottom - gTop) * 0.7,
+    vx: -(3 + Math.random() * 9),         // burst leftward out of the goal
+    vy: (Math.random() - 0.65) * 8,        // mostly upward
+    w: 4 + Math.random() * 5,
+    h: 3 + Math.random() * 3,
+    angle: Math.random() * Math.PI * 2,
+    spin:  (Math.random() - 0.5) * 0.35,
+    color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+    born: now,
+  }));
+}
+
+function drawConfetti(ctx: CanvasRenderingContext2D, confetti: Confetti[], now: number) {
+  for (const c of confetti) {
+    const t = (now - c.born) / CONFETTI_MS;
+    if (t >= 1) continue;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - t * t); // ease out
+    ctx.translate(c.x, c.y);
+    ctx.rotate(c.angle);
+    ctx.fillStyle = c.color;
+    ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+    ctx.restore();
+  }
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SoccerGame() {
@@ -241,6 +282,7 @@ export default function SoccerGame() {
   // Hard mode refs
   const hardModeRef        = useRef(false);
   const escapedBallsRef    = useRef<Ball[]>([]);
+  const confettiRef        = useRef<Confetti[]>([]);
   const goalieRef          = useRef<Goalie | null>(null);
   const globalCursorRef    = useRef({ x: -9999, y: -9999 }); // viewport coords
   const globalSamplesRef   = useRef<Sample[]>([]);             // viewport coords
@@ -324,12 +366,14 @@ export default function SoccerGame() {
       stateRef.current = "idle";
       setGameState("idle");
       escapedBallsRef.current = [];
+      confettiRef.current = [];
       goalieRef.current = null;
     }
     function goOver() {
       stateRef.current = "gameover";
       setGameState("gameover");
       escapedBallsRef.current = [];
+      confettiRef.current = [];
       goalieRef.current = null;
     }
     function goPlay() {
@@ -391,20 +435,16 @@ export default function SoccerGame() {
       const state = stateRef.current;
       const cw = canvas!.width;
       const ch = canvas!.height;
-      ctx.clearRect(0, 0, cw, ch);
 
       frameCountRef.current++;
       if (frameCountRef.current % 30 === 0) updateGroundAndCollidables();
 
-      // Clear overlay each frame
       const overlay    = overlayRef.current;
       const overlayCtx = overlay?.getContext("2d") ?? null;
-      if (overlayCtx && overlay) {
-        overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-      }
 
       // ── IDLE ──────────────────────────────────────────────────────────────
       if (state === "idle") {
+        ctx.clearRect(0, 0, cw, ch);
         const bob = Math.sin(now * 0.002) * 5;
         drawBall(ctx, {
           x: cw / 2, y: ch / 2 + bob,
@@ -432,11 +472,6 @@ export default function SoccerGame() {
         const HIT_R = ball.radius + 4;
 
         if (remaining <= 0) { goOver(); raf = requestAnimationFrame(loop); return; }
-
-        if (now - bornRef.current > MAX_BALL_AGE) {
-          respawnBall(cw, ch, now);
-          raf = requestAnimationFrame(loop); return;
-        }
 
         // ── Physics ────────────────────────────────────────────────────────
         const floorY = ch - GROUND_HEIGHT;
@@ -487,16 +522,15 @@ export default function SoccerGame() {
           ball.vy += ny * impulse * 0.25;
           ball.spin += cv.vx * 0.05;
 
-          // Trigger goalie leap on first kick (hard mode)
+          // Trigger goalie leap on every kick, but only if already landed (hard mode)
           const goalie = goalieRef.current;
-          if (hard && goalie && !goalie.hasLeaped) {
+          if (hard && goalie && goalie.state === "standing") {
             const { top: hTop, bottom: hBottom } = hardGoalBounds(ch);
             const range = hBottom - hTop - GOALIE_RADIUS * 2;
             goalie.leapToY       = hTop + GOALIE_RADIUS + Math.random() * range;
             goalie.leapFromY     = goalie.y;
             goalie.leapStartTime = now;
             goalie.state         = "leaping";
-            goalie.hasLeaped     = true;
           }
         }
 
@@ -522,26 +556,26 @@ export default function SoccerGame() {
           const gdist = Math.sqrt(gdx * gdx + gdy * gdy);
           const gMin  = ball.radius + GOALIE_RADIUS;
           if (gdist < gMin && gdist > 0.01) {
-            const gnx = gdx / gdist, gny = gdy / gdist;
-            ball.x += gnx * (gMin - gdist);
-            ball.y += gny * (gMin - gdist);
-            const relVy = ball.vy - goalie.vy;
-            const dot   = ball.vx * gnx + relVy * gny;
-            if (dot < 0) {
-              ball.vx -= (1 + ELASTICITY) * dot * gnx;
-              ball.vy -= (1 + ELASTICITY) * dot * gny;
-              ball.spin += ball.vx * 0.04;
-            }
+            // Goalie saves the shot — reset the ball
+            respawnBall(cw, ch, now);
+            raf = requestAnimationFrame(loop); return;
           }
         }
 
         // ── Wall collisions ────────────────────────────────────────────────
         const wallX = cw - GOAL_DEPTH;
 
+        // Goal post collisions — top crossbar only; bottom and side posts don't rebound
+        {
+          const pH = 5; // post thickness — must match drawGoal
+          resolveAABBCircle(ball, { left: wallX - 1, top: gTop - pH, right: cw, bottom: gTop });
+        }
+
         if (hard) {
           // Goal detection first
           if (ball.x + ball.radius >= wallX && ball.y > gTop && ball.y < gBottom) {
             scoreRef.current += 1;
+            confettiRef.current.push(...spawnConfetti(wallX, gTop, gBottom, now));
             respawnBall(cw, ch, now);
             raf = requestAnimationFrame(loop); return;
           }
@@ -596,6 +630,7 @@ export default function SoccerGame() {
           if (ball.x + ball.radius >= wallX) {
             if (ball.y > gTop && ball.y < gBottom) {
               scoreRef.current += 1;
+              confettiRef.current.push(...spawnConfetti(wallX, gTop, gBottom, now));
               ballRef.current = spawnBall(cw, ch);
               bornRef.current = now;
               raf = requestAnimationFrame(loop); return;
@@ -641,27 +676,17 @@ export default function SoccerGame() {
             eb.x  += eb.vx;
             eb.y  += eb.vy;
 
-            // Rolling on ground vs. in-air spin
-            if (eb.y + eb.radius >= gY - 1) {
-              eb.spin = eb.vx / eb.radius;
-            } else {
-              eb.spin *= SPIN_DECAY;
-            }
-            eb.angle += eb.spin;
-
             // Ground bounce
             if (eb.y + eb.radius >= gY) {
               eb.y  = gY - eb.radius;
               eb.vy = -Math.abs(eb.vy) * ELASTICITY;
               eb.vx *= FLOOR_FRICTION;
-              eb.spin = -eb.spin * 0.4; // rolling takes over next frame
             }
 
             // Left page-edge bounce (so balls don't escape off the left)
             if (eb.x - eb.radius < 0) {
               eb.x  = eb.radius;
               eb.vx = Math.abs(eb.vx) * ELASTICITY;
-              eb.spin += eb.vy * 0.04;
             }
 
             // DOM + canvas rect collisions (page-absolute coords)
@@ -682,8 +707,15 @@ export default function SoccerGame() {
               eb.y += eny * eoverlap * 0.6;
               eb.vx += enx * gimpulse * 0.25;
               eb.vy += eny * gimpulse * 0.25;
-              eb.spin += gcv.vx * 0.05;
             }
+
+            // Spin & angle update AFTER all velocity changes (prevents rotation glitch at bounces)
+            if (eb.y + eb.radius >= gY - 1) {
+              eb.spin = eb.vx / eb.radius;
+            } else {
+              eb.spin *= SPIN_DECAY;
+            }
+            eb.angle += eb.spin;
           }
 
           // Escaped-escaped collisions
@@ -696,6 +728,7 @@ export default function SoccerGame() {
           // Render escaped balls on the fixed overlay (layout-space → viewport)
           // x_viewport = x_layout + cLeft  (cLeft already computed above)
           if (overlayCtx && overlay) {
+            overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
             for (const eb of escapedBallsRef.current) {
               drawBall(overlayCtx, { ...eb, x: eb.x + cLeft, y: eb.y });
             }
@@ -724,7 +757,18 @@ export default function SoccerGame() {
           }
         }
 
+        // ── Confetti physics ──────────────────────────────────────────────
+        for (const c of confettiRef.current) {
+          c.vy += GRAVITY * 0.35;
+          c.vx *= 0.98;
+          c.x  += c.vx;
+          c.y  += c.vy;
+          c.angle += c.spin;
+        }
+        confettiRef.current = confettiRef.current.filter(c => now - c.born < CONFETTI_MS);
+
         // ── Draw ──────────────────────────────────────────────────────────
+        ctx.clearRect(0, 0, cw, ch);
         drawGround(ctx, cw, ch);
 
         // Top border (hard mode only)
@@ -737,6 +781,7 @@ export default function SoccerGame() {
         drawGoal(ctx, cw, gTop, gBottom);
         if (hard && goalie) drawGoalie(ctx, goalie);
         drawBall(ctx, ball);
+        if (confettiRef.current.length > 0) drawConfetti(ctx, confettiRef.current, now);
 
         // Cursor hit-zone ring
         if (cursorRef.current.x > 0 && cursorRef.current.x < cw) {
@@ -768,6 +813,8 @@ export default function SoccerGame() {
 
       // ── GAMEOVER ──────────────────────────────────────────────────────────
       else if (state === "gameover") {
+        ctx.clearRect(0, 0, cw, ch);
+        if (overlayCtx && overlay) overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
         ctx.fillStyle = "rgba(255,255,255,0.92)";
         ctx.fillRect(0, 0, cw, ch);
 
