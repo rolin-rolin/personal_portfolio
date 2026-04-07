@@ -2,7 +2,6 @@
 
 import React from "react";
 import {
-  animate,
   motion,
   TargetAndTransition,
   useMotionValueEvent,
@@ -11,7 +10,6 @@ import {
   type MotionValue,
 } from "motion/react";
 import { clamp } from "@/lib/clamp";
-import { useMobileDetect } from "@/lib/useMobileDetect";
 import { MAX } from "@/components/sections/LineMinimap";
 
 export const FRAME_WIDTH = 72;
@@ -43,25 +41,24 @@ export const STRIP_MAX = FRAME_STEP * (FRAMES.length - 1);
 export default function ScrollStrip({
   pageScrollX,
   translateX,
+  seekToFrame,
 }: {
   pageScrollX: MotionValue<number>;
   translateX: MotionValue<number>;
+  seekToFrame: (i: number) => void;
 }) {
-  const detect = useMobileDetect();
-  const isMobile = detect.isMobile();
-
   const [activeIndex, setActiveIndex] = React.useState<null | number>(null);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const wheelEndRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  // Reset selection the moment the page starts leaving this section.
-  // Watching the motion value directly is reliable for both wheel and minimap jumps.
+  // Reset active frame when the user scrolls back to a previous section
   useMotionValueEvent(pageScrollX, "change", (v) => {
-    if (v < MAX * 0.95) {
-      setActiveIndex(null);
-      translateX.set(0);
-    }
+    if (v < MAX * 0.95) setActiveIndex(null);
   });
+
+  // Seek page to center the active frame whenever it changes
+  React.useEffect(() => {
+    if (activeIndex !== null) seekToFrame(activeIndex);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex]);
 
   // Keyboard navigation
   React.useEffect(() => {
@@ -73,67 +70,6 @@ export default function ScrollStrip({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
-
-  // Non-passive wheel listener — only active when this section is fully
-  // in the viewport. IntersectionObserver gates it so that page-level
-  // transitions (Projects → ScrollStrip) are never hijacked mid-flight.
-  React.useEffect(() => {
-    const el = containerRef.current;
-    if (!el || isMobile) return;
-
-    const inView = { current: false };
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        inView.current = entry.intersectionRatio >= 0.99;
-      },
-      { threshold: 0.99 }
-    );
-    observer.observe(el);
-
-    function handleWheel(e: WheelEvent) {
-      if (!inView.current) return; // section not fully visible — let page handle
-
-      const delta =
-        Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-      const current = translateX.get();
-
-      if (delta > 0 && current <= -STRIP_MAX) return; // end — let page handle
-      if (delta < 0 && current >= 0) return; // start — let page handle
-
-      e.preventDefault();
-
-      translateX.stop();
-      translateX.set(clamp(current - delta, [-STRIP_MAX, 0]));
-      setActiveIndex(null);
-
-      clearTimeout(wheelEndRef.current);
-      wheelEndRef.current = setTimeout(() => {
-        const index = Math.round(
-          clamp(-translateX.get() / FRAME_STEP, [0, FRAMES.length - 1])
-        );
-        setActiveIndex((cur) => (cur === null ? index : cur));
-      }, 150);
-    }
-
-    el.addEventListener("wheel", handleWheel, { passive: false });
-    return () => {
-      el.removeEventListener("wheel", handleWheel);
-      observer.disconnect();
-    };
-  }, [isMobile, translateX]);
-
-  // Animate translateX when activeIndex changes (click or arrow keys)
-  React.useEffect(() => {
-    if (activeIndex !== null) {
-      animate(translateX, -activeIndex * FRAME_STEP, {
-        type: "spring",
-        stiffness: 500,
-        damping: 30,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex]);
 
   function arrow(dir: 1 | -1) {
     return (e: KeyboardEvent) => {
@@ -153,10 +89,7 @@ export default function ScrollStrip({
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="relative flex h-full w-[100vw] items-center"
-    >
+    <div className="relative flex h-full w-[100vw] items-center">
       <div
         className="relative"
         style={{
@@ -164,7 +97,17 @@ export default function ScrollStrip({
           marginLeft: `calc(50vw - ${FRAME_DIFF_CENTER + FRAME_STEP / 2}px)`,
         }}
       >
-        <motion.div style={{ x: translateX }}>
+        <motion.div style={{ x: translateX, height: FRAME_HEIGHT }} className="relative">
+          {/* Arrow sits at a fixed negative offset from frame 0 — moves with the strip
+              so it can never be overlapped by frames no matter how far you scroll */}
+          <motion.span
+            className="absolute top-1/2 -translate-y-1/2 text-(--accent) text-lg font-mono select-none pointer-events-none"
+            style={{ left: -40 }}
+            animate={{ x: [0, 6, 0] }}
+            transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+          >
+            →
+          </motion.span>
           {FRAMES.map((gradient, i) => {
             const active = activeIndex === i;
             return (
