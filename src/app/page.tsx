@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion, useSpring, useTransform } from "motion/react";
+import { motion, useMotionValue, useSpring, useTransform } from "motion/react";
 import Hero from "@/components/sections/Hero";
 import WorkExperience from "@/components/sections/WorkExperience";
 import Projects from "@/components/sections/Projects";
@@ -21,7 +21,11 @@ const SECTIONS = [
 export default function Home() {
   const { scrollX, seekTo } = useScrollXFromWheel(MAX);
 
-  const ballX = useSpring(scrollX, { stiffness: 1000, damping: 60 });
+  const stripProgress = useMotionValue(0);
+  const ballXRaw = useTransform([scrollX, stripProgress], ([sx, sp]) =>
+    (sx as number) < MAX ? (sx as number) : MAX + (sp as number) * 100
+  );
+  const ballX = useSpring(ballXRaw, { stiffness: 1000, damping: 60 });
 
   // Page translateX: clamped at MAX so the flex container never exceeds 400vw.
   // Uses vw units — identical feel to the original, no px/layout concerns.
@@ -45,8 +49,8 @@ export default function Home() {
         <div className="w-[100vw] h-full flex-shrink-0">
           <Projects scrollX={scrollX} />
         </div>
-        <div className="w-[100vw] h-full flex-shrink-0 overflow-hidden">
-          <Miscellaneous />
+        <div className="w-[100vw] h-full flex-shrink-0" style={{ clipPath: "inset(0 0 0 -50px)" }}>
+          <Miscellaneous stripProgress={stripProgress} />
         </div>
       </motion.div>
     </main>

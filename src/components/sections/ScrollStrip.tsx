@@ -1,13 +1,17 @@
 "use client";
 
 import React from "react";
+import { createPortal } from "react-dom";
 import {
+  AnimatePresence,
   animate,
   motion,
   TargetAndTransition,
   useMotionValue,
+  useMotionValueEvent,
   useSpring,
   useTransform,
+  type MotionValue,
 } from "motion/react";
 import { clamp } from "@/lib/clamp";
 import { useMobileDetect } from "@/lib/useMobileDetect";
@@ -22,24 +26,19 @@ export const FRAME_GAP = 16;
 export const FRAME_DIFF_CENTER = FRAME_WIDTH_DIFF / 2;
 export const FRAME_STEP = FRAME_GAP + FRAME_WIDTH;
 
-const DIRECTORY_LABELS = [
-  "beach",   "hiking",  "travel",  "family",  "food",
-  "city",    "nature",  "friends", "music",   "art",
-  "sport",   "work",    "home",    "pets",    "books",
-  "film",    "coffee",  "sunset",  "snow",    "rain",
-  "road",    "market",  "night",   "garden",  "ocean",
-];
-
-const CARD_W = 80;
-const CARD_THUMB_H = 90;
-const CARD_GAP = 8;
-const GRID_COLS = 5;
-const GRID_ROWS = 5;
-// Right edge of grid in overlay coords: anchored 48px left of the arrow.
-// Arrow is at -40 in inner-div coords; inner-div starts at calc(50vw - 248px) in overlay.
-// Grid right from overlay-left = (50vw - 248) + (-40 - 48) = 50vw - 336.
-// Grid right from overlay-RIGHT = 100vw - (50vw - 336) = 50vw + 336.
-const GRID_OVERLAY_RIGHT = `calc(50vw + ${FRAME_DIFF_CENTER + FRAME_STEP / 2 + 40 + 48}px)`;
+// Layout constants for the arrow and strip positioning.
+// ARROW_OFFSET: how far left of frame 0 the arrow sits (px).
+// STRIP_EXTRA:  extra pixels to shift the entire strip toward the left edge.
+// ARROW_GAP:    equal breathing-room gap on each side of the arrow.
+// ─────────────────────────────────────────────────────────────────────────
+//   [grid right edge] ──(ARROW_GAP)── [arrow] ──(ARROW_GAP)── [frame 0]
+// ─────────────────────────────────────────────────────────────────────────
+const ARROW_OFFSET = 80;
+const STRIP_EXTRA  = 50;
+const STRIP_INDENT = FRAME_DIFF_CENTER + FRAME_STEP / 2 + STRIP_EXTRA; // = 298
+const ARROW_GAP    = ARROW_OFFSET + FRAME_GAP / 2;                     // = 88
+// Grid's right edge, expressed as CSS `right` from the viewport right edge.
+const GRID_OVERLAY_RIGHT = `calc(50vw + ${STRIP_INDENT + ARROW_OFFSET + ARROW_GAP}px)`;
 
 // Placeholder gradients — swap these out for real <Image> imports
 const BASE_FRAMES: [string, string][] = [
@@ -54,15 +53,52 @@ const BASE_FRAMES: [string, string][] = [
   ["#3d7e6b", "#1a3d2e"],
 ];
 
-const FRAMES = [...BASE_FRAMES, ...BASE_FRAMES, ...BASE_FRAMES, ...BASE_FRAMES];
+const FRAMES = [...BASE_FRAMES, ...BASE_FRAMES, ...BASE_FRAMES, ...BASE_FRAMES].slice(0, 25);
 const STRIP_MAX = FRAME_STEP * (FRAMES.length - 1);
 
-export default function ScrollStrip() {
+const NARRATIONS = [
+  "first morning in kyoto, before anyone else was awake",
+  "my dog doing the thing where she stares at nothing",
+  "the light through my apartment at 4pm in november",
+  "a meal that took three hours and was gone in twenty minutes",
+  "the hiking trail we almost turned back on",
+  "a city i didn't expect to love",
+  "golden hour that lasted exactly four minutes",
+  "the kind of quiet you only get on long drives",
+  "our corner table at the spot we went to every week",
+  "the view from the roof we weren't supposed to be on",
+  "catching the last train by thirty seconds",
+  "a friend who always orders too much food",
+  "the beach before the crowd showed up",
+  "a weekend trip that turned into a week",
+  "a coffee shop i never found again",
+  "the moment right before it started raining",
+  "somewhere in the mountains, no signal, didn't matter",
+  "the cat near the market that trusted no one",
+  "a sunset that felt like it was just for us",
+  "the apartment we lived in when everything changed",
+  "three in the morning and we were still talking",
+  "the garden we stumbled into by accident",
+  "a bookstore with no particular system",
+  "the last day of something good",
+  "still figuring out what this one means",
+];
+
+export default function ScrollStrip({ progress }: { progress?: MotionValue<number> }) {
   const detect = useMobileDetect();
   const isMobile = detect.isMobile();
 
   const [activeIndex, setActiveIndex] = React.useState<null | number>(null);
-  const translateX = useMotionValue(0);
+  const [narrateIndex, setNarrateIndex] = React.useState(0);
+  const [isInStrip, setIsInStrip] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  const translateX = useMotionValue(STRIP_EXTRA);
+
+  useMotionValueEvent(translateX, "change", (v) => {
+    progress?.set((STRIP_EXTRA - v) / STRIP_MAX);
+    setNarrateIndex(Math.round(clamp((STRIP_EXTRA - v) / FRAME_STEP, [0, FRAMES.length - 1])));
+  });
   const containerRef = React.useRef<HTMLDivElement>(null);
   const wheelEndRef = React.useRef<ReturnType<typeof setTimeout>>();
 
@@ -91,9 +127,10 @@ export default function ScrollStrip() {
         const nowInView = entry.intersectionRatio >= 0.99;
         if (!nowInView && inView.current) {
           setActiveIndex(null);
-          animate(translateX, 0, { type: "spring", stiffness: 500, damping: 30 });
+          animate(translateX, STRIP_EXTRA, { type: "spring", stiffness: 500, damping: 30 });
         }
         inView.current = nowInView;
+        setIsInStrip(nowInView);
       },
       { threshold: 0.99 }
     );
@@ -106,19 +143,19 @@ export default function ScrollStrip() {
         Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       const current = translateX.get();
 
-      if (delta > 0 && current <= -STRIP_MAX) return; // end — let page handle
-      if (delta < 0 && current >= 0) return; // start — let page handle
+      if (delta > 0 && current <= -STRIP_MAX + STRIP_EXTRA) return; // end — let page handle
+      if (delta < 0 && current >= STRIP_EXTRA) return; // start — let page handle
 
       e.preventDefault();
 
       translateX.stop();
-      translateX.set(clamp(current - delta, [-STRIP_MAX, 0]));
+      translateX.set(clamp(current - delta, [-STRIP_MAX + STRIP_EXTRA, STRIP_EXTRA]));
       setActiveIndex(null);
 
       clearTimeout(wheelEndRef.current);
       wheelEndRef.current = setTimeout(() => {
         const index = Math.round(
-          clamp(-translateX.get() / FRAME_STEP, [0, FRAMES.length - 1])
+          clamp((STRIP_EXTRA - translateX.get()) / FRAME_STEP, [0, FRAMES.length - 1])
         );
         setActiveIndex((cur) => (cur === null ? index : cur));
       }, 150);
@@ -134,7 +171,7 @@ export default function ScrollStrip() {
   // Animate translateX when activeIndex changes (click or arrow keys)
   React.useEffect(() => {
     if (activeIndex !== null) {
-      animate(translateX, -activeIndex * FRAME_STEP, {
+      animate(translateX, -activeIndex * FRAME_STEP + STRIP_EXTRA, {
         type: "spring",
         stiffness: 500,
         damping: 30,
@@ -161,42 +198,52 @@ export default function ScrollStrip() {
   }
 
   return (
+    <>
+      {mounted && createPortal(
+        <AnimatePresence>
+          {isInStrip && (
+            <motion.div
+              className="fixed top-8 right-8 text-right z-50 pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={narrateIndex}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                  className="font-mono text-sm leading-relaxed text-(--muted) max-w-[260px]"
+                >
+                  {NARRATIONS[narrateIndex]}
+                </motion.p>
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
     <div
       ref={containerRef}
       className="relative flex h-full w-[100vw] items-center"
     >
-      {/* Directory overlay — full section height, same translateX as frames */}
+      {/* Static text overlay — moves with the strip */}
       <motion.div
         style={{ x: translateX }}
         className="absolute inset-0 pointer-events-none"
       >
         <div
-          className="absolute top-1/2 -translate-y-1/2 flex flex-col pointer-events-auto"
-          style={{ right: GRID_OVERLAY_RIGHT, gap: CARD_GAP }}
+          className="absolute top-1/2 -translate-y-1/2 text-right pointer-events-none"
+          style={{ right: GRID_OVERLAY_RIGHT }}
         >
-          {Array.from({ length: GRID_ROWS }, (_, row) => (
-            <div key={row} className="flex" style={{ gap: CARD_GAP }}>
-              {Array.from({ length: GRID_COLS }, (_, col) => {
-                const idx = row * GRID_COLS + col;
-                const gradient = FRAMES[idx % FRAMES.length];
-                return (
-                  <div key={col} className="flex flex-col items-center gap-[3px]">
-                    <div
-                      className="rounded-[2px] flex-shrink-0"
-                      style={{
-                        width: CARD_W,
-                        height: CARD_THUMB_H,
-                        background: `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`,
-                      }}
-                    />
-                    <span className="text-[9px] font-mono text-(--muted) truncate text-center" style={{ width: CARD_W }}>
-                      {DIRECTORY_LABELS[idx]}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          ))}
+          <p className="font-mono text-sm leading-relaxed text-(--muted) max-w-[220px]">
+            this is also a quiet archive —<br />
+            moments i didn&rsquo;t want to forget.
+          </p>
         </div>
       </motion.div>
 
@@ -204,15 +251,15 @@ export default function ScrollStrip() {
         className="relative"
         style={{
           height: FRAME_HEIGHT,
-          marginLeft: `calc(50vw - ${FRAME_DIFF_CENTER + FRAME_STEP / 2}px)`,
+          marginLeft: `calc(50vw - ${STRIP_INDENT}px)`,
         }}
       >
         <motion.div style={{ x: translateX, height: FRAME_HEIGHT }} className="relative">
           {/* Arrow sits at a fixed negative offset from frame 0 — moves with the strip
               so it can never be overlapped by frames no matter how far you scroll */}
           <motion.span
-            className="absolute top-1/2 -translate-y-1/2 text-(--accent) text-lg font-mono select-none pointer-events-none"
-            style={{ left: -40 }}
+            className="absolute top-1/2 -translate-y-1/2 text-(--accent) text-3xl font-mono select-none pointer-events-none"
+            style={{ left: -ARROW_OFFSET }}
             animate={{ x: [0, 6, 0] }}
             transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
           >
@@ -240,6 +287,7 @@ export default function ScrollStrip() {
         </motion.div>
       </div>
     </div>
+    </>
   );
 }
 
