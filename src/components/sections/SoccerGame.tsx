@@ -262,9 +262,10 @@ function drawConfetti(ctx: CanvasRenderingContext2D, confetti: Confetti[], now: 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SoccerGame() {
-  const canvasRef    = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const overlayRef   = useRef<HTMLCanvasElement>(null);
+  const canvasRef       = useRef<HTMLCanvasElement>(null);
+  const containerRef    = useRef<HTMLDivElement>(null);
+  const overlayRef      = useRef<HTMLCanvasElement>(null);
+  const naturalHeightRef = useRef<number | null>(null);
 
   const [gameState, setGameState] = useState<GameState>("idle");
   const [hardMode,  setHardMode]  = useState(false);
@@ -863,8 +864,10 @@ export default function SoccerGame() {
     const container = containerRef.current;
     if (container) {
       if (next) {
-        // Extend container 50px upward only — bottom stays aligned with normal mode
-        container.style.height    = (container.clientHeight + 50) + "px";
+        if (naturalHeightRef.current === null) {
+          naturalHeightRef.current = container.clientHeight;
+        }
+        container.style.height    = (naturalHeightRef.current + 50) + "px";
         container.style.transform = "translateY(-50px)";
       } else {
         container.style.height    = "";
