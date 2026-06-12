@@ -71,23 +71,6 @@ function spawnBall(cw: number, ch: number): Ball {
   };
 }
 
-function spawnBallHard(cw: number, ch: number): Ball {
-  // Fixed stationary spawn on the grass, left-center of field
-  const floorY = ch - GROUND_HEIGHT;
-  return {
-    x:  cw * 0.28,
-    y:  floorY - BALL_RADIUS,
-    vx: 0,
-    vy: 0,
-    radius: BALL_RADIUS,
-    spin: 0,
-    angle: 0,
-  };
-}
-
-function hardSpawnPoint(cw: number, ch: number) {
-  return { x: cw * 0.28, y: ch - GROUND_HEIGHT - BALL_RADIUS };
-}
 
 function goalBounds(ch: number) {
   const h = ch * GOAL_RATIO;
@@ -96,8 +79,8 @@ function goalBounds(ch: number) {
 }
 
 function hardGoalBounds(ch: number) {
-  const top = goalBounds(ch).top;
-  return { top, bottom: ch - GROUND_HEIGHT };
+  const floorY = ch - GROUND_HEIGHT;
+  return { top: floorY * 0.55, bottom: floorY };
 }
 
 function makeGoalie(cw: number, ch: number): Goalie {
@@ -265,7 +248,6 @@ export default function SoccerGame() {
   const canvasRef       = useRef<HTMLCanvasElement>(null);
   const containerRef    = useRef<HTMLDivElement>(null);
   const overlayRef      = useRef<HTMLCanvasElement>(null);
-  const naturalHeightRef = useRef<number | null>(null);
 
   const [gameState, setGameState] = useState<GameState>("idle");
   const [hardMode,  setHardMode]  = useState(false);
@@ -305,8 +287,8 @@ export default function SoccerGame() {
     // ── Resize ──────────────────────────────────────────────────────────────
     function resize() {
       if (!canvas || !container) return;
-      canvas.width  = container.clientWidth;
-      canvas.height = container.clientHeight;
+      canvas.width  = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
       const overlay = overlayRef.current;
       if (overlay) {
         overlay.width  = window.innerWidth;
@@ -381,7 +363,7 @@ export default function SoccerGame() {
       const now = performance.now();
       const cw = canvas!.width, ch = canvas!.height;
       if (hardModeRef.current) {
-        ballRef.current  = spawnBallHard(cw, ch);
+        ballRef.current  = spawnBall(cw, ch);
         goalieRef.current = makeGoalie(cw, ch);
       } else {
         ballRef.current = spawnBall(cw, ch);
@@ -395,7 +377,7 @@ export default function SoccerGame() {
     }
 
     function respawnBall(cw: number, ch: number, now: number) {
-      ballRef.current = hardModeRef.current ? spawnBallHard(cw, ch) : spawnBall(cw, ch);
+      ballRef.current = spawnBall(cw, ch);
       bornRef.current = now;
       if (hardModeRef.current) goalieRef.current = makeGoalie(cw, ch);
     }
@@ -859,21 +841,17 @@ export default function SoccerGame() {
     hardModeRef.current = hardMode;
   }, [hardMode]);
 
+  // Size the overlay canvas the moment it mounts (when hard mode turns on)
+  useEffect(() => {
+    if (!hardMode) return;
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    overlay.width  = window.innerWidth;
+    overlay.height = window.innerHeight;
+  }, [hardMode]);
+
   function toggleHardMode() {
     const next = !hardMode;
-    const container = containerRef.current;
-    if (container) {
-      if (next) {
-        if (naturalHeightRef.current === null) {
-          naturalHeightRef.current = container.clientHeight;
-        }
-        container.style.height    = (naturalHeightRef.current + 50) + "px";
-        container.style.transform = "translateY(-50px)";
-      } else {
-        container.style.height    = "";
-        container.style.transform = "";
-      }
-    }
     setHardMode(next);
     hardModeRef.current = next;
     stateRef.current = "idle";
@@ -883,7 +861,7 @@ export default function SoccerGame() {
   }
 
   return (
-    <div ref={containerRef} className="hidden lg:flex flex-[2] relative">
+    <div ref={containerRef} className="relative flex-1 pt-28">
       <canvas
         ref={canvasRef}
         className="w-full h-full"

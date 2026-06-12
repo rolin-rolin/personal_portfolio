@@ -89,27 +89,6 @@ function AccentLine() {
 export default function Hero() {
     return (
         <section className="relative h-screen flex flex-col px-8 md:px-16 lg:px-24 pt-20 pb-6">
-            {/* Currently — top right */}
-            <motion.div
-                className="absolute top-20 right-8 md:right-16 lg:right-24 text-right"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: [0, -6, 0] }}
-                transition={{
-                    opacity: { duration: 0.6, delay: 1.1 },
-                    y: { delay: 1.7, duration: 5, repeat: Infinity, ease: "easeInOut" },
-                }}
-            >
-                <p className="text-[9px] font-mono uppercase tracking-widest text-(--muted) mb-5">What I&rsquo;ve been up to</p>
-                <div className="flex flex-col gap-5">
-                    {CURRENTLY.map(({ label, value }) => (
-                        <div key={label} className="flex flex-col gap-1 border-r-2 border-(--accent) pr-3">
-                            <span className="text-base font-mono">{value}</span>
-                            <span className="text-[9px] font-mono uppercase tracking-widest text-(--muted)">{label}</span>
-                        </div>
-                    ))}
-                </div>
-            </motion.div>
-
             {/* Main content row */}
             <div className="flex-1 flex items-center gap-12 min-h-0">
                 {/* Left column */}
@@ -212,8 +191,33 @@ export default function Hero() {
                     </motion.div>
                 </div>
 
-                {/* Right column — Soccer game */}
-                <SoccerGame />
+                {/* Right column — Soccer game + "What I've been up to" */}
+                <div className="hidden lg:flex flex-[2] flex-col gap-6 min-h-0 h-full">
+                    <div className="flex-[5] min-h-0 flex flex-col justify-center">
+                        <SoccerGame />
+                    </div>
+                    <div className="flex-[3]">
+                    <motion.div
+                        className="text-left"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: [0, -6, 0] }}
+                        transition={{
+                            opacity: { duration: 0.6, delay: 1.1 },
+                            y: { delay: 1.7, duration: 5, repeat: Infinity, ease: "easeInOut" },
+                        }}
+                    >
+                        <p className="text-sm font-mono uppercase tracking-widest text-(--muted) mb-5">What I&rsquo;ve been up to</p>
+                        <div className="flex flex-col gap-5 items-start">
+                            {CURRENTLY.map(({ label, value }) => (
+                                <div key={label} className="flex flex-col gap-1 border-l-2 border-(--accent) pl-3">
+                                    <span className="text-base font-mono">{value}</span>
+                                    <span className="text-[9px] font-mono uppercase tracking-widest text-(--muted)">{label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                    </div>
+                </div>
             </div>
 
             {/* Status bar */}
