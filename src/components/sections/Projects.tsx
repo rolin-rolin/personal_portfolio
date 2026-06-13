@@ -4,6 +4,7 @@ import React from "react";
 import { motion, AnimatePresence, useTransform, type MotionValue } from "motion/react";
 import { MAX } from "@/components/sections/LineMinimap";
 import { useClickOutside } from "@/lib/useClickOutside";
+import AccentLine from "@/components/ui/AccentLine";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -342,14 +343,15 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
         Selected Work
       </motion.p>
       <motion.h2
-        className="text-[clamp(3rem,8vw,7rem)] font-semibold leading-[0.9] tracking-tight mb-6"
+        className="text-[clamp(3rem,8vw,7rem)] font-semibold leading-[0.9] tracking-tight"
         style={{ opacity: headerOpacity, y: headerY }}
       >
-        Projects<span className="text-(--accent)">.</span>
+        Projects
       </motion.h2>
+      <AccentLine />
 
       {/* Mode toggle */}
-      <motion.div className="flex gap-3 mb-6" style={{ opacity: headerOpacity }}>
+      <motion.div className="flex gap-3 mt-6 mb-6" style={{ opacity: headerOpacity }}>
         {(["chaos", "order"] as const).map((m) => (
           <button
             key={m}

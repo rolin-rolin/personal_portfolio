@@ -1,12 +1,41 @@
 "use client";
 
-import { animate, motion, useMotionTemplate, useMotionValue, type Variants } from "motion/react";
-import { useEffect } from "react";
+import { motion, type Variants } from "motion/react";
 import { BlurReveal } from "@/components/ui/BlurReveal";
+import AccentLine from "@/components/ui/AccentLine";
 import SoccerGame from "@/components/sections/SoccerGame";
 
-const TITLE_WORDS = ["Software", "Engineer"];
-const SUBTITLE = "TODO: write your intro paragraph here.";
+const TITLE_WORDS = ["Hi! I'm Ron", "I like to build"];
+const SUBTITLE: { text: string; highlight?: boolean }[][] = [
+    [
+        { text: "I'm drawn to work where the gap between " },
+        { text: "building and impact", highlight: true },
+        { text: " is small." },
+    ],
+    [
+        { text: "I love actually " },
+        { text: "owning", highlight: true },
+        { text: " my work. Scoping, shipping, watching users interact with it, and iterating." },
+    ],
+    [
+        { text: "I rely on two kinds of listening when building: " },
+        { text: "data", highlight: true },
+        { text: " to find patterns and trends, and " },
+        { text: "field work", highlight: true },
+        { text: ", which is what I call direct conversations with users that tell me what no metric can." },
+    ],
+    [
+        { text: "I love " },
+        { text: "food", highlight: true },
+        { text: ", making and listening to " },
+        { text: "music", highlight: true },
+        { text: ", every " },
+        { text: "sport", highlight: true },
+        { text: " imaginable, and views (like mountains and stuff) that remind you the " },
+        { text: "world", highlight: true },
+        { text: " is absurdly beautiful." },
+    ],
+];
 const CURRENT_ROLE = "@ Company"; // TODO: update
 const SOCIAL_LINKS = [
     { label: "GitHub", href: "https://github.com/username" }, // TODO: update
@@ -14,11 +43,10 @@ const SOCIAL_LINKS = [
     { label: "Email", href: "mailto:you@example.com" }, // TODO: update
 ];
 const CURRENTLY = [
-    { label: "reading",   value: "TODO" },
+    { label: "reading", value: "TODO" },
     { label: "listening", value: "TODO" },
-    { label: "building",  value: "TODO" },
+    { label: "building", value: "TODO" },
 ];
-
 
 const container: Variants = {
     hidden: {},
@@ -50,41 +78,19 @@ const fadeUp: Variants = {
     },
 };
 
-const lineDraw: Variants = {
-    hidden: { scaleX: 0 },
-    show: {
-        scaleX: 1,
-        transition: {
-            duration: 0.9,
-            ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-            delay: 0.2,
-        },
-    },
+const subtitleContainer: Variants = {
+    hidden: {},
+    show: { transition: { staggerChildren: 0.18, delayChildren: 0.55 } },
 };
 
-// Animated gradient accent line
-function AccentLine() {
-    const shimmer = useMotionValue(0);
-    useEffect(() => {
-        animate(shimmer, 100, {
-            duration: 2.5,
-            repeat: Infinity,
-            repeatType: "reverse",
-            ease: "easeInOut",
-        });
-    }, [shimmer]);
-    const accentGradient = useMotionTemplate`linear-gradient(90deg, #ff4d00 0%, #ffaa00 ${shimmer}%, #ff4d00 100%)`;
-
-    return (
-        <motion.div
-            className="h-[3px] w-32 mt-8 origin-left"
-            style={{ background: accentGradient }}
-            variants={lineDraw}
-            initial="hidden"
-            animate="show"
-        />
-    );
-}
+const subtitleLine: Variants = {
+    hidden: { opacity: 0, y: 16 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+    },
+};
 
 export default function Hero() {
     return (
@@ -119,7 +125,7 @@ export default function Hero() {
                             <div key={word} className="overflow-hidden pb-3">
                                 <motion.div variants={wordVariant}>
                                     <motion.h1
-                                        className="text-[clamp(3.5rem,10vw,9rem)] font-semibold leading-[0.9] tracking-tight"
+                                        className="text-[clamp(3rem,20vw,6.5rem)] font-semibold leading-[1] tracking-tight"
                                         animate={{ y: [0, -5, 0] }}
                                         transition={{
                                             repeat: Infinity,
@@ -128,14 +134,7 @@ export default function Hero() {
                                             delay: 1.6 + i * 0.6,
                                         }}
                                     >
-                                        {word === "Engineer" ? (
-                                            <>
-                                                {word}
-                                                <span className="text-(--accent)">.</span>
-                                            </>
-                                        ) : (
-                                            word
-                                        )}
+                                        {word}
                                     </motion.h1>
                                 </motion.div>
                             </div>
@@ -144,15 +143,38 @@ export default function Hero() {
 
                     <AccentLine />
 
-                    {/* Subtitle — paragraph-friendly sizing */}
-                    <motion.p
-                        className="mt-6 text-base leading-relaxed text-(--muted) max-w-xl"
-                        variants={fadeUp}
+                    {/* Subtitle — staggered lines with highlights */}
+                    <motion.div
+                        className="mt-6 max-w-[90%] flex flex-col gap-2"
+                        variants={subtitleContainer}
                         initial="hidden"
                         animate="show"
                     >
-                        {SUBTITLE}
-                    </motion.p>
+                        <motion.p
+                            className="text-sm font-mono uppercase tracking-widest text-(--muted) mb-1"
+                            variants={subtitleLine}
+                        >
+                            Here&rsquo;s a couple things you should know about me
+                        </motion.p>
+                        {SUBTITLE.map((line, i) => (
+                            <motion.p
+                                key={i}
+                                className="text-base leading-relaxed text-(--muted)"
+                                variants={subtitleLine}
+                            >
+                                <span className="text-(--accent) font-mono mr-2">{i + 1}.</span>
+                                {line.map((seg, j) =>
+                                    seg.highlight ? (
+                                        <span key={j} className="text-(--foreground) font-medium">
+                                            {seg.text}
+                                        </span>
+                                    ) : (
+                                        seg.text
+                                    ),
+                                )}
+                            </motion.p>
+                        ))}
+                    </motion.div>
 
                     {/* Social links */}
                     <div className="mt-8 flex items-center gap-6">
@@ -197,25 +219,29 @@ export default function Hero() {
                         <SoccerGame />
                     </div>
                     <div className="flex-[3]">
-                    <motion.div
-                        className="text-left"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: [0, -6, 0] }}
-                        transition={{
-                            opacity: { duration: 0.6, delay: 1.1 },
-                            y: { delay: 1.7, duration: 5, repeat: Infinity, ease: "easeInOut" },
-                        }}
-                    >
-                        <p className="text-sm font-mono uppercase tracking-widest text-(--muted) mb-5">What I&rsquo;ve been up to</p>
-                        <div className="flex flex-col gap-5 items-start">
-                            {CURRENTLY.map(({ label, value }) => (
-                                <div key={label} className="flex flex-col gap-1 border-l-2 border-(--accent) pl-3">
-                                    <span className="text-base font-mono">{value}</span>
-                                    <span className="text-[9px] font-mono uppercase tracking-widest text-(--muted)">{label}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </motion.div>
+                        <motion.div
+                            className="text-left"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: [0, -6, 0] }}
+                            transition={{
+                                opacity: { duration: 0.6, delay: 1.1 },
+                                y: { delay: 1.7, duration: 5, repeat: Infinity, ease: "easeInOut" },
+                            }}
+                        >
+                            <p className="text-sm font-mono uppercase tracking-widest text-(--muted) mb-5">
+                                What I&rsquo;ve been up to
+                            </p>
+                            <div className="flex flex-col gap-5 items-start">
+                                {CURRENTLY.map(({ label, value }) => (
+                                    <div key={label} className="flex flex-col gap-1 border-l-2 border-(--accent) pl-3">
+                                        <span className="text-base font-mono">{value}</span>
+                                        <span className="text-[9px] font-mono uppercase tracking-widest text-(--muted)">
+                                            {label}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
                     </div>
                 </div>
             </div>

@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useTransform, type MotionValue } from "motion/
 import React from "react";
 import { MAX } from "@/components/sections/LineMinimap";
 import { useClickOutside } from "@/lib/useClickOutside";
+import AccentLine from "@/components/ui/AccentLine";
 
 const JOBS = [
     {
@@ -201,11 +202,13 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
                 Work Experience
             </motion.p>
             <motion.h2
-                className="text-[clamp(3rem,8vw,7rem)] font-semibold leading-[0.9] tracking-tight mb-16"
+                className="text-[clamp(3rem,8vw,7rem)] font-semibold leading-[0.9] tracking-tight"
                 style={{ opacity: headerOpacity, y: headerY }}
             >
-                Experience<span className="text-(--accent)">.</span>
+                Experience
             </motion.h2>
+            <AccentLine />
+            <div className="mb-16" />
             <div className="flex flex-col gap-10">
                 {JOBS.map((job, i) => (
                     <JobRow key={job.company} job={job} scrollX={scrollX} inputRange={JOB_RANGES[i]} />
