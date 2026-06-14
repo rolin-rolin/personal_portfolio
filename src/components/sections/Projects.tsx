@@ -87,27 +87,20 @@ type Project = (typeof PROJECTS)[number];
 
 // ── Physics constants ─────────────────────────────────────────────────────────
 
-const CW = 264;
-const CH = 192;
-const GAP = 22;
+const CW = 210;
+const CH = 155;
+const GAP = 16;
 const COLS = 3;
-const STAGE_W = COLS * CW + (COLS - 1) * GAP + 8; // 836px
-const DETAIL_W = 520;
-const DETAIL_H = 560;
+const STAGE_W = COLS * CW + (COLS - 1) * GAP + 8; // 670px
 
-const GRID_POS = PROJECTS.map((_, i) => ({
-  x: (i % COLS) * (CW + GAP) + 4,
-  y: Math.floor(i / COLS) * (CH + GAP) + 4,
-  r: 0,
-}));
-
+// Chaos resting positions scaled to the smaller stage
 const CHAOS_BASES = [
-  { x: 16,  y: 16,  r: -5 },
-  { x: 316, y: 44,  r:  4 },
-  { x: 605, y: 10,  r: -3 },
-  { x: 90,  y: 255, r:  6 },
-  { x: 380, y: 272, r: -4 },
-  { x: 668, y: 248, r:  3 },
+  { x: 12,  y: 12,  r: -5 },
+  { x: 228, y: 40,  r:  4 },
+  { x: 438, y: 10,  r: -3 },
+  { x: 72,  y: 220, r:  6 },
+  { x: 268, y: 228, r: -4 },
+  { x: 448, y: 208, r:  3 },
 ];
 
 interface PhysState {
@@ -130,7 +123,6 @@ function ProjectDetail({
 }) {
   return (
     <div className="flex flex-col h-full p-[26px] overflow-y-auto">
-      {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div>
           <div
@@ -151,12 +143,10 @@ function ProjectDetail({
         </button>
       </div>
 
-      {/* Full description */}
       <p className="text-[13px] leading-relaxed text-[#44445A] mb-5">
         {project.fullDesc}
       </p>
 
-      {/* Images row (placeholder) */}
       {project.images.length > 0 && (
         <div className="flex gap-2 overflow-x-auto mb-5 pb-1">
           {project.images.map((src, i) => (
@@ -171,7 +161,6 @@ function ProjectDetail({
         </div>
       )}
 
-      {/* Tech tags */}
       <div className="flex gap-[6px] flex-wrap mb-5">
         {project.tags.map((tag) => (
           <span
@@ -184,7 +173,6 @@ function ProjectDetail({
         ))}
       </div>
 
-      {/* Links */}
       <div className="flex gap-3 mt-auto">
         {project.links.github && (
           <a
@@ -214,10 +202,7 @@ function ProjectDetail({
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) {
-  const [mode, setMode] = React.useState<"chaos" | "order">("chaos");
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
-  const prevSelectedRef = React.useRef<number | null>(null);
-  const modeRef = React.useRef(mode);
   const stageRef = React.useRef<HTMLDivElement>(null);
   const detailRef = React.useRef<HTMLDivElement>(null);
   const cardRefs = React.useRef<(HTMLDivElement | null)[]>([]);
@@ -236,21 +221,10 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
     }))
   );
 
-  React.useEffect(() => {
-    modeRef.current = mode;
-  }, [mode]);
-
-  // Keep prevSelectedRef one render behind so the returning card gets the spring
-  React.useEffect(() => {
-    prevSelectedRef.current = selectedIndex;
-  }, [selectedIndex]);
-
-  // Click-outside closes detail panel
   useClickOutside(detailRef, () => {
     if (selectedIndex !== null) setSelectedIndex(null);
   });
 
-  // Escape key closes detail panel
   React.useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setSelectedIndex(null);
@@ -259,7 +233,6 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  // Track mouse relative to stage
   React.useEffect(() => {
     function onMouseMove(e: MouseEvent) {
       const stage = stageRef.current;
@@ -271,7 +244,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
     return () => document.removeEventListener("mousemove", onMouseMove);
   }, []);
 
-  // Animation loop — directly writes to DOM, no React re-renders
+  // Animation loop — chaos only, directly writes to DOM
   React.useEffect(() => {
     let raf: number;
 
@@ -280,30 +253,21 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
       const { x: mX, y: mY } = mouseRef.current;
       const phys = physRef.current;
       const cards = cardRefs.current;
-      const m = modeRef.current;
 
       phys.forEach((p, i) => {
-        let tx: number, ty: number, tr: number;
+        let tx = p.bx + Math.sin(t * p.fx + p.px) * 20;
+        let ty = p.by + Math.cos(t * p.fy + p.py) * 16;
+        let tr = p.br + Math.sin(t * 0.55 + p.px) * 2.2;
 
-        if (m === "chaos") {
-          tx = p.bx + Math.sin(t * p.fx + p.px) * 20;
-          ty = p.by + Math.cos(t * p.fy + p.py) * 16;
-          tr = p.br + Math.sin(t * 0.55 + p.px) * 2.2;
-
-          const cx = p.x + CW / 2;
-          const cy = p.y + CH / 2;
-          const dx = cx - mX;
-          const dy = cy - mY;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 240 && dist > 0) {
-            const force = Math.pow((240 - dist) / 240, 1.8) * 72;
-            tx += (dx / dist) * force;
-            ty += (dy / dist) * force;
-          }
-        } else {
-          tx = GRID_POS[i].x;
-          ty = GRID_POS[i].y;
-          tr = 0;
+        const cx = p.x + CW / 2;
+        const cy = p.y + CH / 2;
+        const dx = cx - mX;
+        const dy = cy - mY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 240 && dist > 0) {
+          const force = Math.pow((240 - dist) / 240, 1.8) * 72;
+          tx += (dx / dist) * force;
+          ty += (dy / dist) * force;
         }
 
         if (p.wob) {
@@ -311,11 +275,8 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
           tr += Math.sin(p.wobT * 5) * 6 * Math.exp(-p.wobT * 0.12);
         }
 
-        const k    = m === "order" ? 0.13  : 0.075;
-        const damp = m === "order" ? 0.70  : 0.78;
-
-        p.vx += (tx - p.x) * k;   p.vx *= damp;  p.x += p.vx;
-        p.vy += (ty - p.y) * k;   p.vy *= damp;  p.y += p.vy;
+        p.vx += (tx - p.x) * 0.075; p.vx *= 0.78; p.x += p.vx;
+        p.vy += (ty - p.y) * 0.075; p.vy *= 0.78; p.y += p.vy;
         p.rotV += (tr - p.rot) * 0.11; p.rotV *= 0.72; p.rot += p.rotV;
 
         const card = cards[i];
@@ -336,153 +297,122 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
 
   return (
     <section className="h-screen flex flex-col justify-center px-8 md:px-16 lg:px-24">
-      <motion.p
-        className="text-sm font-mono tracking-widest uppercase text-(--muted) mb-4"
-        style={{ opacity: headerOpacity, y: headerY }}
-      >
-        Selected Work
-      </motion.p>
-      <motion.h2
-        className="text-[clamp(3rem,8vw,7rem)] font-semibold leading-[0.9] tracking-tight"
-        style={{ opacity: headerOpacity, y: headerY }}
-      >
-        Projects
-      </motion.h2>
-      <AccentLine />
-      <motion.div
-        className="mt-6 mb-4 max-w-xl flex flex-col gap-2"
-        style={{ opacity: headerOpacity, y: headerY }}
-      >
-        <p className="text-base leading-relaxed text-(--muted)">
-          <span className="text-(--accent) font-mono mr-2">1.</span>
-          I love actually{" "}
-          <span className="text-(--foreground) font-medium">owning</span> my work —
-          scoping, shipping, watching users interact with it, and iterating.
-        </p>
-        <p className="text-base leading-relaxed text-(--muted)">
-          <span className="text-(--accent) font-mono mr-2">2.</span>
-          At{" "}
-          <span className="text-(--foreground) font-medium">Athena</span>, I learned that
-          the best signals come from{" "}
-          <span className="text-(--foreground) font-medium">field work</span> — direct
-          conversations with users that tell you what no metric can.
-        </p>
-      </motion.div>
+      <div className="flex items-stretch gap-16 flex-1 min-h-0">
 
-      {/* Mode toggle */}
-      <motion.div className="flex gap-3 mb-6" style={{ opacity: headerOpacity }}>
-        {(["chaos", "order"] as const).map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            className={`text-xs font-mono px-4 py-1.5 rounded-full border border-neutral-900 cursor-pointer select-none transition-colors ${
-              mode === m
-                ? "bg-neutral-900 text-white"
-                : "bg-white text-neutral-900 hover:bg-neutral-100"
-            }`}
+        {/* Left column — title, subtitle, and detail panel overlay */}
+        <div className="flex-[2] relative flex flex-col justify-center min-w-0">
+          <motion.p
+            className="text-sm font-mono tracking-widest uppercase text-(--muted) mb-4"
+            style={{ opacity: headerOpacity, y: headerY }}
           >
-            {m === "chaos" ? "✦ Chaos" : "⊞ Order"}
-          </button>
-        ))}
-      </motion.div>
+            Selected Work
+          </motion.p>
+          <motion.h2
+            className="text-[clamp(3rem,8vw,7rem)] font-semibold leading-[0.9] tracking-tight"
+            style={{ opacity: headerOpacity, y: headerY }}
+          >
+            Projects
+          </motion.h2>
+          <AccentLine />
+          <motion.div
+            className="mt-6 flex flex-col gap-2"
+            style={{ opacity: headerOpacity, y: headerY }}
+          >
+            <p className="text-base leading-relaxed text-(--muted)">
+              <span className="text-(--accent) font-mono mr-2">1.</span>
+              I love actually{" "}
+              <span className="text-(--foreground) font-medium">owning</span> my work —
+              scoping, shipping, watching users interact with it, and iterating.
+            </p>
+            <p className="text-base leading-relaxed text-(--muted)">
+              <span className="text-(--accent) font-mono mr-2">2.</span>
+              At{" "}
+              <span className="text-(--foreground) font-medium">Athena</span>, I learned that
+              the best signals come from{" "}
+              <span className="text-(--foreground) font-medium">field work</span> — direct
+              conversations with users that tell you what no metric can.
+            </p>
+          </motion.div>
 
-      {/* Stage — panel lives inside as an absolute child so it never affects layout */}
-      <div
-        ref={stageRef}
-        className="relative flex-shrink-0"
-        style={{
-          width: STAGE_W,
-          height: mode === "order" ? 420 : 480,
-          transition: "height .5s cubic-bezier(.34, 1.1, .64, 1)",
-        }}
-      >
-          {PROJECTS.map((p, i) => (
-            <div
-              key={p.name}
-              ref={(el) => { cardRefs.current[i] = el; }}
-              className="absolute top-0 left-0"
-              style={{
-                width: CW,
-                willChange: "transform",
-                visibility: selectedIndex === i ? "hidden" : "visible",
-              }}
-              onMouseEnter={() => {
-                physRef.current[i].wob = true;
-                physRef.current[i].wobT = 0;
-              }}
-              onMouseLeave={() => {
-                physRef.current[i].wob = false;
-              }}
-              onClick={() => setSelectedIndex(i)}
-            >
+          {/* Detail panel slides in over the left column when a card is selected */}
+          <AnimatePresence>
+            {selectedIndex !== null && (
               <motion.div
-                layoutId={`card-${i}`}
-                className="rounded-[22px] border-[2.5px] border-neutral-900 cursor-pointer select-none p-[22px]"
-                style={{
-                  backgroundColor: p.bg,
-                  boxShadow: `4px 4px 0 ${p.accent}`,
-                }}
-                transition={
-                  selectedIndex === i || prevSelectedRef.current === i
-                    ? { type: "spring", stiffness: 550, damping: 45, mass: 0.7 }
-                    : { duration: 0 }
-                }
+                ref={detailRef}
+                key={selectedIndex}
+                className="absolute inset-0 rounded-[22px] border-[2.5px] border-neutral-900 bg-white overflow-hidden z-10"
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 500, damping: 40, mass: 0.8 }}
               >
-                <span className="block text-[26px] mb-[11px] leading-none">{p.emoji}</span>
-                <div className="font-semibold text-base mb-[5px]" style={{ color: "#1A1A2E" }}>
-                  {p.name}
-                </div>
-                <div className="text-[13px] leading-relaxed mb-[14px]" style={{ color: "#44445A" }}>
-                  {p.desc}
-                </div>
-                <div className="flex gap-[5px] flex-wrap">
-                  {p.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-[11px] font-semibold px-[10px] py-[3px] rounded-full border border-neutral-900"
-                      style={{ backgroundColor: "rgba(255,255,255,0.7)", color: "#1A1A2E" }}
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                <ProjectDetail
+                  project={PROJECTS[selectedIndex]}
+                  onClose={() => setSelectedIndex(null)}
+                />
               </motion.div>
-            </div>
-          ))}
+            )}
+          </AnimatePresence>
+        </div>
 
-          {/* Detail panel — absolute inside the stage, to the right; zero layout impact */}
+        {/* Right column — floating card stage */}
+        <div className="flex-[3] flex items-center justify-center min-h-0 min-w-0">
           <div
-            ref={detailRef}
-            className="absolute bottom-0"
-            style={{ left: STAGE_W + 128 }}
+            ref={stageRef}
+            className="relative flex-shrink-0"
+            style={{ width: STAGE_W, height: 400 }}
           >
-            <AnimatePresence>
-              {selectedIndex !== null && (
-                <motion.div
-                  key={selectedIndex}
-                  layoutId={`card-${selectedIndex}`}
-                  className="overflow-hidden rounded-[22px] border-[2.5px] border-neutral-900 bg-white"
-                  style={{ width: DETAIL_W, height: DETAIL_H }}
-                  transition={{ type: "spring", stiffness: 550, damping: 45, mass: 0.7 }}
+            {PROJECTS.map((p, i) => (
+              <div
+                key={p.name}
+                ref={(el) => { cardRefs.current[i] = el; }}
+                className="absolute top-0 left-0"
+                style={{
+                  width: CW,
+                  willChange: "transform",
+                  visibility: selectedIndex === i ? "hidden" : "visible",
+                }}
+                onMouseEnter={() => {
+                  physRef.current[i].wob = true;
+                  physRef.current[i].wobT = 0;
+                }}
+                onMouseLeave={() => {
+                  physRef.current[i].wob = false;
+                }}
+                onClick={() => setSelectedIndex(i)}
+              >
+                <div
+                  className="rounded-[22px] border-[2.5px] border-neutral-900 cursor-pointer select-none p-[22px]"
+                  style={{
+                    backgroundColor: p.bg,
+                    boxShadow: `4px 4px 0 ${p.accent}`,
+                  }}
                 >
-                  <motion.div
-                    key={selectedIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    style={{ width: DETAIL_W, height: DETAIL_H }}
-                  >
-                    <ProjectDetail
-                      project={PROJECTS[selectedIndex]}
-                      onClose={() => setSelectedIndex(null)}
-                    />
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <span className="block text-[26px] mb-[11px] leading-none">{p.emoji}</span>
+                  <div className="font-semibold text-base mb-[5px]" style={{ color: "#1A1A2E" }}>
+                    {p.name}
+                  </div>
+                  <div className="text-[13px] leading-relaxed mb-[14px]" style={{ color: "#44445A" }}>
+                    {p.desc}
+                  </div>
+                  <div className="flex gap-[5px] flex-wrap">
+                    {p.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-[11px] font-semibold px-[10px] py-[3px] rounded-full border border-neutral-900"
+                        style={{ backgroundColor: "rgba(255,255,255,0.7)", color: "#1A1A2E" }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
+
+      </div>
     </section>
   );
 }
