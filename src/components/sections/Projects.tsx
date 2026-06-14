@@ -349,9 +349,28 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
         Projects
       </motion.h2>
       <AccentLine />
+      <motion.div
+        className="mt-6 mb-4 max-w-xl flex flex-col gap-2"
+        style={{ opacity: headerOpacity, y: headerY }}
+      >
+        <p className="text-base leading-relaxed text-(--muted)">
+          <span className="text-(--accent) font-mono mr-2">1.</span>
+          I love actually{" "}
+          <span className="text-(--foreground) font-medium">owning</span> my work —
+          scoping, shipping, watching users interact with it, and iterating.
+        </p>
+        <p className="text-base leading-relaxed text-(--muted)">
+          <span className="text-(--accent) font-mono mr-2">2.</span>
+          At{" "}
+          <span className="text-(--foreground) font-medium">Athena</span>, I learned that
+          the best signals come from{" "}
+          <span className="text-(--foreground) font-medium">field work</span> — direct
+          conversations with users that tell you what no metric can.
+        </p>
+      </motion.div>
 
       {/* Mode toggle */}
-      <motion.div className="flex gap-3 mt-6 mb-6" style={{ opacity: headerOpacity }}>
+      <motion.div className="flex gap-3 mb-6" style={{ opacity: headerOpacity }}>
         {(["chaos", "order"] as const).map((m) => (
           <button
             key={m}

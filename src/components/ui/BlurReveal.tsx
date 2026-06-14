@@ -34,7 +34,7 @@ export function BlurReveal({
 
 function Effects() {
   return (
-    <div className="absolute inset-0 -ml-8">
+    <div className="absolute inset-0 -ml-8 pointer-events-none">
       <div aria-hidden className={styles.blur} />
       <svg className={styles.noise}>
         <filter id="noise">

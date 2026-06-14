@@ -44,9 +44,9 @@ const RESUME_PDF = "/resume.pdf";
 
 const PANEL_SPRING = {
     type: "spring",
-    stiffness: 550,
-    damping: 45,
-    mass: 0.7,
+    stiffness: 220,
+    damping: 40,
+    mass: 1.2,
 } as const;
 
 function useViewportSize() {
@@ -92,7 +92,7 @@ function ResumePill() {
                 height: open ? panelH : 44,
                 borderRadius: open ? 14 : 22,
             }}
-            whileHover={!open ? { scale: 4 } : {}}
+            whileHover={!open ? { scale: 1.3 } : {}}
             whileTap={!open ? { scale: 0.97 } : {}}
             transition={{
                 ...PANEL_SPRING,
@@ -208,7 +208,23 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
                 Experience
             </motion.h2>
             <AccentLine />
-            <div className="mb-16" />
+            <motion.div
+                className="mt-6 mb-10 max-w-xl flex flex-col gap-2"
+                style={{ opacity: headerOpacity, y: headerY }}
+            >
+                <p className="text-base leading-relaxed text-(--muted)">
+                    <span className="text-(--accent) font-mono mr-2">1.</span>
+                    I&rsquo;m drawn to work where the gap between{" "}
+                    <span className="text-(--foreground) font-medium">building</span> and{" "}
+                    <span className="text-(--foreground) font-medium">impact</span> is small.
+                </p>
+                <p className="text-base leading-relaxed text-(--muted)">
+                    <span className="text-(--accent) font-mono mr-2">2.</span>
+                    My work at <span className="text-(--foreground) font-medium">PwC</span> taught me to listen to{" "}
+                    <span className="text-(--foreground) font-medium">data</span> — surfacing patterns and trends that
+                    tell you what&rsquo;s actually happening.
+                </p>
+            </motion.div>
             <div className="flex flex-col gap-10">
                 {JOBS.map((job, i) => (
                     <JobRow key={job.company} job={job} scrollX={scrollX} inputRange={JOB_RANGES[i]} />

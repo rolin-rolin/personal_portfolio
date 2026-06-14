@@ -6,41 +6,11 @@ import AccentLine from "@/components/ui/AccentLine";
 import SoccerGame from "@/components/sections/SoccerGame";
 
 const TITLE_WORDS = ["Hi! I'm Ron", "I like to build"];
-const SUBTITLE: { text: string; highlight?: boolean }[][] = [
-    [
-        { text: "I'm drawn to work where the gap between " },
-        { text: "building and impact", highlight: true },
-        { text: " is small." },
-    ],
-    [
-        { text: "I love actually " },
-        { text: "owning", highlight: true },
-        { text: " my work. Scoping, shipping, watching users interact with it, and iterating." },
-    ],
-    [
-        { text: "I rely on two kinds of listening when building: " },
-        { text: "data", highlight: true },
-        { text: " to find patterns and trends, and " },
-        { text: "field work", highlight: true },
-        { text: ", which is what I call direct conversations with users that tell me what no metric can." },
-    ],
-    [
-        { text: "I love " },
-        { text: "food", highlight: true },
-        { text: ", making and listening to " },
-        { text: "music", highlight: true },
-        { text: ", every " },
-        { text: "sport", highlight: true },
-        { text: " imaginable, and views (like mountains and stuff) that remind you the " },
-        { text: "world", highlight: true },
-        { text: " is absurdly beautiful." },
-    ],
-];
-const CURRENT_ROLE = "@ Company"; // TODO: update
+const CURRENT_ROLE = "@ University of Notre Dame";
 const SOCIAL_LINKS = [
-    { label: "GitHub", href: "https://github.com/username" }, // TODO: update
-    { label: "LinkedIn", href: "https://linkedin.com/in/username" }, // TODO: update
-    { label: "Email", href: "mailto:you@example.com" }, // TODO: update
+    { label: "GitHub", href: "https://github.com/rolin-rolin" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/ron-lin" },
+    { label: "Email", href: "mailto:rolin71110@gmail.com" },
 ];
 const CURRENTLY = [
     { label: "reading", value: "TODO" },
@@ -143,9 +113,9 @@ export default function Hero() {
 
                     <AccentLine />
 
-                    {/* Subtitle — staggered lines with highlights */}
+                    {/* Intro + personal note */}
                     <motion.div
-                        className="mt-6 max-w-[90%] flex flex-col gap-2"
+                        className="mt-6 max-w-[90%] flex flex-col gap-3"
                         variants={subtitleContainer}
                         initial="hidden"
                         animate="show"
@@ -154,26 +124,32 @@ export default function Hero() {
                             className="text-sm font-mono uppercase tracking-widest text-(--muted) mb-1"
                             variants={subtitleLine}
                         >
-                            Here&rsquo;s a couple things you should know about me
+                            A little about me
                         </motion.p>
-                        {SUBTITLE.map((line, i) => (
-                            <motion.p
-                                key={i}
-                                className="text-base leading-relaxed text-(--muted)"
-                                variants={subtitleLine}
-                            >
-                                <span className="text-(--accent) font-mono mr-2">{i + 1}.</span>
-                                {line.map((seg, j) =>
-                                    seg.highlight ? (
-                                        <span key={j} className="text-(--foreground) font-medium">
-                                            {seg.text}
-                                        </span>
-                                    ) : (
-                                        seg.text
-                                    ),
-                                )}
-                            </motion.p>
-                        ))}
+                        <motion.p
+                            className="text-base leading-relaxed text-(--muted)"
+                            variants={subtitleLine}
+                        >
+                            I&rsquo;m a rising senior at the{" "}
+                            <span className="text-(--foreground) font-medium">University of Notre Dame</span>{" "}
+                            studying{" "}
+                            <span className="text-(--foreground) font-medium">computer science</span>{" "}
+                            and{" "}
+                            <span className="text-(--foreground) font-medium">economics</span>.
+                        </motion.p>
+                        <motion.p
+                            className="text-base leading-relaxed text-(--muted)"
+                            variants={subtitleLine}
+                        >
+                            I love{" "}
+                            <span className="text-(--foreground) font-medium">food</span>, making and
+                            listening to{" "}
+                            <span className="text-(--foreground) font-medium">music</span>, every{" "}
+                            <span className="text-(--foreground) font-medium">sport</span> imaginable,
+                            and views (like mountains and stuff) that remind you the{" "}
+                            <span className="text-(--foreground) font-medium">world</span> is absurdly
+                            beautiful.
+                        </motion.p>
                     </motion.div>
 
                     {/* Social links */}
