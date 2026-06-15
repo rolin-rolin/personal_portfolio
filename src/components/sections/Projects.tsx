@@ -89,18 +89,16 @@ type Project = (typeof PROJECTS)[number];
 
 const CW = 210;
 const CH = 155;
-const GAP = 16;
-const COLS = 3;
-const STAGE_W = COLS * CW + (COLS - 1) * GAP + 8; // 670px
+const STAGE_W = 830; // 2 × 310px strides + CW
 
-// Chaos resting positions scaled to the smaller stage
+// 100px horizontal gutters (310px column stride), 150px vertical gutters (305px row stride)
 const CHAOS_BASES = [
-  { x: 12,  y: 12,  r: -5 },
-  { x: 228, y: 40,  r:  4 },
-  { x: 438, y: 10,  r: -3 },
-  { x: 72,  y: 220, r:  6 },
-  { x: 268, y: 228, r: -4 },
-  { x: 448, y: 208, r:  3 },
+  { x: 0,   y: 0,   r: -5 },
+  { x: 310, y: 12,  r:  4 },
+  { x: 620, y: 0,   r: -3 },
+  { x: 20,  y: 305, r:  6 },
+  { x: 315, y: 315, r: -4 },
+  { x: 615, y: 298, r:  3 },
 ];
 
 interface PhysState {
@@ -297,10 +295,10 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
 
   return (
     <section className="h-screen flex flex-col justify-center px-8 md:px-16 lg:px-24">
-      <div className="flex items-stretch gap-16 flex-1 min-h-0">
+      <div className="flex items-stretch gap-6 flex-1 min-h-0">
 
         {/* Left column — title, subtitle, and detail panel overlay */}
-        <div className="flex-[2] relative flex flex-col justify-center min-w-0">
+        <div className="flex-[3] relative flex flex-col justify-center min-w-0">
           <motion.p
             className="text-sm font-mono tracking-widest uppercase text-(--muted) mb-4"
             style={{ opacity: headerOpacity, y: headerY }}
@@ -318,13 +316,13 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
             className="mt-6 flex flex-col gap-2"
             style={{ opacity: headerOpacity, y: headerY }}
           >
-            <p className="text-base leading-relaxed text-(--muted)">
+            <p className="text-base leading-relaxed text-(--muted) font-mono">
               <span className="text-(--accent) font-mono mr-2">1.</span>
               I love actually{" "}
               <span className="text-(--foreground) font-medium">owning</span> my work —
               scoping, shipping, watching users interact with it, and iterating.
             </p>
-            <p className="text-base leading-relaxed text-(--muted)">
+            <p className="text-base leading-relaxed text-(--muted) font-mono">
               <span className="text-(--accent) font-mono mr-2">2.</span>
               At{" "}
               <span className="text-(--foreground) font-medium">Athena</span>, I learned that
@@ -356,11 +354,11 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
         </div>
 
         {/* Right column — floating card stage */}
-        <div className="flex-[3] flex items-center justify-center min-h-0 min-w-0">
+        <div className="flex-[7] flex items-center justify-center min-h-0 min-w-0">
           <div
             ref={stageRef}
-            className="relative flex-shrink-0"
-            style={{ width: STAGE_W, height: 400 }}
+            className="relative flex-shrink-0 ml-24"
+            style={{ width: STAGE_W, height: 460 }}
           >
             {PROJECTS.map((p, i) => (
               <div

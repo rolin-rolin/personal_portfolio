@@ -27,6 +27,9 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="prefetch" href="/resume.pdf" as="document" />
+      </head>
       <body className="h-full">{children}</body>
     </html>
   );

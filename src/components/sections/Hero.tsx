@@ -127,7 +127,7 @@ export default function Hero() {
                             A little about me
                         </motion.p>
                         <motion.p
-                            className="text-base leading-relaxed text-(--muted)"
+                            className="text-base leading-relaxed text-(--muted) font-mono"
                             variants={subtitleLine}
                         >
                             I&rsquo;m a rising senior at the{" "}
@@ -138,7 +138,7 @@ export default function Hero() {
                             <span className="text-(--foreground) font-medium">economics</span>.
                         </motion.p>
                         <motion.p
-                            className="text-base leading-relaxed text-(--muted)"
+                            className="text-base leading-relaxed text-(--muted) font-mono"
                             variants={subtitleLine}
                         >
                             I love{" "}

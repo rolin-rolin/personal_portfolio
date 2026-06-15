@@ -64,6 +64,7 @@ function useViewportSize() {
 
 function ResumePill() {
     const [open, setOpen] = React.useState(false);
+    const [showIframe, setShowIframe] = React.useState(false);
     const rootRef = React.useRef<HTMLDivElement>(null);
     const { w, h } = useViewportSize();
     const [pillWidth, setPillWidth] = React.useState(100);
@@ -74,6 +75,16 @@ function ResumePill() {
             setPillWidth(rootRef.current.scrollWidth);
         }
     }, []);
+
+    // Delay iframe mount until the spring has settled so the PDF always renders into a full-size panel
+    React.useEffect(() => {
+        if (open) {
+            const id = setTimeout(() => setShowIframe(true), 500);
+            return () => clearTimeout(id);
+        } else {
+            setShowIframe(false);
+        }
+    }, [open]);
 
     // Panel fills the right half of the viewport with padding
     const panelW = Math.max(w * 0.5 - 48, 320);
@@ -136,7 +147,7 @@ function ResumePill() {
 
             {/* PDF */}
             <AnimatePresence>
-                {open && (
+                {showIframe && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -212,13 +223,13 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
                 className="mt-6 mb-10 max-w-xl flex flex-col gap-2"
                 style={{ opacity: headerOpacity, y: headerY }}
             >
-                <p className="text-base leading-relaxed text-(--muted)">
+                <p className="text-base leading-relaxed text-(--muted) font-mono">
                     <span className="text-(--accent) font-mono mr-2">1.</span>
                     I&rsquo;m drawn to work where the gap between{" "}
                     <span className="text-(--foreground) font-medium">building</span> and{" "}
                     <span className="text-(--foreground) font-medium">impact</span> is small.
                 </p>
-                <p className="text-base leading-relaxed text-(--muted)">
+                <p className="text-base leading-relaxed text-(--muted) font-mono">
                     <span className="text-(--accent) font-mono mr-2">2.</span>
                     My work at <span className="text-(--foreground) font-medium">PwC</span> taught me to listen to{" "}
                     <span className="text-(--foreground) font-medium">data</span> — surfacing patterns and trends that
