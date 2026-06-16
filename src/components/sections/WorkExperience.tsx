@@ -2,9 +2,12 @@
 
 import { AnimatePresence, motion, useTransform, type MotionValue } from "motion/react";
 import React from "react";
+import dynamic from "next/dynamic";
 import { MAX } from "@/components/sections/LineMinimap";
 import { useClickOutside } from "@/lib/useClickOutside";
 import AccentLine from "@/components/ui/AccentLine";
+
+const ResumePdf = dynamic(() => import("@/components/ui/ResumePdf"), { ssr: false });
 
 const JOBS = [
     {
@@ -39,7 +42,6 @@ const JOB_RANGES: [number, number][] = [
     [MAX * 0.15, MAX * 0.33],
 ];
 
-// TODO: Drop your resume PDF into /public and set the filename here
 const RESUME_PDF = "/resume.pdf";
 
 const PANEL_SPRING = {
@@ -62,41 +64,47 @@ function useViewportSize() {
     return size;
 }
 
+
 function ResumePill() {
     const [open, setOpen] = React.useState(false);
-    const [showIframe, setShowIframe] = React.useState(false);
     const rootRef = React.useRef<HTMLDivElement>(null);
+    const scrollRef = React.useRef<HTMLDivElement>(null);
     const { w, h } = useViewportSize();
     const [pillWidth, setPillWidth] = React.useState(100);
 
-    // Measure the natural pill width once on mount so we can animate back to it smoothly
     React.useLayoutEffect(() => {
-        if (rootRef.current) {
-            setPillWidth(rootRef.current.scrollWidth);
-        }
+        if (rootRef.current) setPillWidth(rootRef.current.scrollWidth);
     }, []);
-
-    // Delay iframe mount until the spring has settled so the PDF always renders into a full-size panel
-    React.useEffect(() => {
-        if (open) {
-            const id = setTimeout(() => setShowIframe(true), 500);
-            return () => clearTimeout(id);
-        } else {
-            setShowIframe(false);
-        }
-    }, [open]);
 
     // Panel fills the right half of the viewport with padding
     const panelW = Math.max(w * 0.5 - 48, 320);
-    const panelH = Math.max(h - 100 - 48, 300); // 100px minimap offset + 48px bottom breathing room
+    const panelH = Math.max(h - 100 - 120, 300);
+
+    // PDF content width = panel width minus padding (2 * 16px)
+    const contentW = panelW - 32;
 
     const close = React.useCallback(() => setOpen(false), []);
     useClickOutside(rootRef, close);
+
+    // When the panel is open, intercept wheel events and redirect them to the PDF scroll container
+    React.useEffect(() => {
+        if (!open) return;
+        const el = rootRef.current;
+        if (!el) return;
+        function handleWheel(e: WheelEvent) {
+            e.preventDefault();
+            if (scrollRef.current) scrollRef.current.scrollTop += e.deltaY;
+        }
+        el.addEventListener("wheel", handleWheel, { passive: false });
+        return () => el.removeEventListener("wheel", handleWheel);
+    }, [open]);
 
     return (
         <motion.div
             ref={rootRef}
             className="bg-(--background) border border-neutral-200 shadow-lg overflow-hidden flex flex-col"
+            onClick={!open ? () => setOpen(true) : undefined}
+            style={{ cursor: open ? "default" : "pointer" }}
             initial={false}
             animate={{
                 width: open ? panelW : pillWidth,
@@ -111,19 +119,11 @@ function ResumePill() {
                 scale: { type: "spring", stiffness: 250, damping: 25 },
             }}
         >
-            {/* Single header row — acts as pill when closed, panel header when open */}
+            {/* Header row — pill when closed, panel header when open */}
             <div
                 className={`relative flex items-center justify-center px-4 h-[44px] shrink-0 whitespace-nowrap${open ? " border-b border-neutral-200" : ""}`}
             >
-                <button
-                    onClick={() => setOpen(true)}
-                    className="flex items-center gap-2 cursor-pointer"
-                    style={{ pointerEvents: open ? "none" : "all" }}
-                    aria-label="Open resume"
-                >
-                    <span className="text-sm font-mono tracking-wide text-(--foreground)">Resume</span>
-                </button>
-                {/* Absolutely positioned so they never affect the layout width during morph */}
+                <span className="text-sm font-mono tracking-wide text-(--foreground)">Resume</span>
                 <AnimatePresence>
                     {open && (
                         <motion.div
@@ -145,24 +145,10 @@ function ResumePill() {
                 </AnimatePresence>
             </div>
 
-            {/* PDF */}
-            <AnimatePresence>
-                {showIframe && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={PANEL_SPRING}
-                        className="flex-1 flex items-center justify-center p-4"
-                    >
-                        <iframe
-                            src={`${RESUME_PDF}#toolbar=0&navpanes=0`}
-                            className="w-full h-full rounded-[8px]"
-                            title="Resume"
-                        />
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* PDF — always mounted, canvas re-renders at liveWidth each frame of the morph */}
+            <div ref={scrollRef} className="flex-1 overflow-y-scroll overflow-x-hidden flex justify-center p-4">
+                <ResumePdf file={RESUME_PDF} width={contentW} />
+            </div>
         </motion.div>
     );
 }
