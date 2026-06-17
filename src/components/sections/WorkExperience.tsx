@@ -11,28 +11,31 @@ const ResumePdf = dynamic(() => import("@/components/ui/ResumePdf"), { ssr: fals
 
 const JOBS = [
     {
-        company: "Acme Corp",
-        role: "Senior Software Engineer",
-        period: "2022 — Present",
+        company: "PricewaterhouseCoopers",
+        role: "Technology and Data Solutions Intern",
+        period: "June 2025 — Aug. 2025",
         bullets: [
-            "Led migration from monolith to microservices, cutting p99 latency by 40%.",
-            "Architected real-time data pipeline handling 50k events/sec.",
+            "Personalization algo for 7M+ users; 40% retention lift.",
+            "Monte Carlo model: 2× revenue/employee uplift for client.",
         ],
     },
     {
-        company: "Startup Inc",
-        role: "Software Engineer",
-        period: "2020 — 2022",
+        company: "Athena (Acquired)",
+        role: "Founding Software Engineering Intern",
+        period: "May 2024 — Aug. 2024",
         bullets: [
-            "Built core product features from 0→1, contributing to Series A fundraise.",
-            "Owned frontend architecture, improving LCP from 4.2s to 1.1s.",
+            "Data pipeline increased throughput 10×; auth cut account fraud 5×.",
+            "Social media content: 100k+ views; grew daily active users 50%.",
         ],
     },
     {
-        company: "Big Tech Co",
-        role: "Software Engineer Intern",
-        period: "Summer 2019",
-        bullets: ["Shipped A/B experiment that increased user engagement by 12%."],
+        company: "Amazon",
+        role: "Product Management Extern",
+        period: "Jan. 2024 — April 2024",
+        bullets: [
+            "Surveys and A/B tests to surface pain points and features.",
+            "Prototyped Echo Show feature; presented to Amazon leadership.",
+        ],
     },
 ];
 
@@ -63,7 +66,6 @@ function useViewportSize() {
     }, []);
     return size;
 }
-
 
 function ResumePill() {
     const [open, setOpen] = React.useState(false);
@@ -166,7 +168,7 @@ function JobRow({
     const y = useTransform(scrollX, inputRange, [16, 0]);
 
     return (
-        <motion.div className="grid grid-cols-[180px_1fr] gap-8" style={{ opacity, y }}>
+        <motion.div className="grid grid-cols-[180px_1fr] gap-8 max-w-[45vw]" style={{ opacity, y }}>
             <div>
                 <p className="font-semibold">{job.company}</p>
                 <p className="text-sm text-(--muted) font-mono mt-1">{job.period}</p>
@@ -206,7 +208,7 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
             </motion.h2>
             <AccentLine />
             <motion.div
-                className="mt-6 mb-10 max-w-xl flex flex-col gap-2"
+                className="mt-6 mb-10 max-w-[40vw] flex flex-col gap-2"
                 style={{ opacity: headerOpacity, y: headerY }}
             >
                 <p className="text-base leading-relaxed text-(--muted) font-mono">
@@ -218,8 +220,8 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
                 <p className="text-base leading-relaxed text-(--muted) font-mono">
                     <span className="text-(--accent) font-mono mr-2">2.</span>
                     My work at <span className="text-(--foreground) font-medium">PwC</span> taught me to listen to{" "}
-                    <span className="text-(--foreground) font-medium">data</span> — surfacing patterns and trends that
-                    tell you what&rsquo;s actually happening.
+                    <span className="text-(--foreground) font-medium">data</span>: patterns and trends that tell you
+                    what&rsquo;s actually happening.
                 </p>
             </motion.div>
             <div className="flex flex-col gap-10">
