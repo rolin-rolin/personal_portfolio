@@ -83,6 +83,7 @@ export default function LineMinimap({
                     ))}
                 </div>
                 <Indicator x={ballX ?? scrollX} />
+                <RollinText x={ballX ?? scrollX} />
             </div>
         </motion.div>
     );
@@ -265,6 +266,55 @@ export function isActive(index: number, count: number): boolean {
 
 const BALL_RADIUS = 9;
 const DEG_PER_PX = 180 / (Math.PI * BALL_RADIUS);
+
+const ROLLIN_TEXT_LEFT = MAX + 10;
+const ROLLIN_LETTERS = "keep it rollin".split("");
+
+// Large enough to never clip the text on the right
+const ROLLIN_CONTAINER_W = 200;
+
+function RollinText({ x }: { x: MotionValue<number> }) {
+    // clipPath inset from the right: shrinks as ball moves right, revealing text left-to-right
+    const clipPath = useTransform(x, (v) => {
+        const revealed = Math.max(0, v - BALL_RADIUS - ROLLIN_TEXT_LEFT);
+        const rightInset = Math.max(0, ROLLIN_CONTAINER_W - revealed);
+        return `inset(0 ${rightInset}px 0 0)`;
+    });
+
+    return (
+        <motion.div
+            className="absolute pointer-events-none"
+            style={{
+                left: ROLLIN_TEXT_LEFT,
+                top: LINE_HEIGHT_ACTIVE + 4,
+                height: BALL_RADIUS * 2 + 8,
+                width: ROLLIN_CONTAINER_W,
+                clipPath,
+            }}
+        >
+            <span
+                className="whitespace-nowrap text-[14px] leading-none h-full flex items-center text-sky-300"
+                style={{ fontFamily: "var(--font-fredoka)" }}
+            >
+                {ROLLIN_LETTERS.map((char, i) => (
+                    <motion.span
+                        key={i}
+                        className="inline-block"
+                        animate={{ y: [0, -3, 0, 3, 0] }}
+                        transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            delay: i * 0.1,
+                        }}
+                    >
+                        {char === " " ? " " : char}
+                    </motion.span>
+                ))}
+            </span>
+        </motion.div>
+    );
+}
 
 export function Indicator({ x }: { x: MotionValue<number> }) {
     const rotate = useTransform(x, (v) => v * DEG_PER_PX);
