@@ -168,16 +168,16 @@ function JobRow({
     const y = useTransform(scrollX, inputRange, [16, 0]);
 
     return (
-        <motion.div className="grid grid-cols-[180px_1fr] gap-8 max-w-[45vw]" style={{ opacity, y }}>
+        <motion.div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-4 lg:gap-8 max-w-full lg:max-w-[45vw]" style={{ opacity, y }}>
             <div>
-                <p className="font-semibold">{job.company}</p>
-                <p className="text-sm text-(--muted) font-mono mt-1">{job.period}</p>
+                <p className="text-[clamp(0.75rem,1.4vw,1rem)] font-semibold">{job.company}</p>
+                <p className="text-[clamp(0.65rem,1.2vw,0.875rem)] text-(--muted) font-mono mt-1">{job.period}</p>
             </div>
             <div>
-                <p className="text-sm font-mono text-(--muted) uppercase tracking-widest mb-2">{job.role}</p>
+                <p className="text-[clamp(0.65rem,1.2vw,0.875rem)] font-mono text-(--muted) uppercase tracking-widest mb-2">{job.role}</p>
                 <ul className="space-y-1">
                     {job.bullets.map((b) => (
-                        <li key={b} className="text-sm text-(--muted) leading-relaxed">
+                        <li key={b} className="text-[clamp(0.65rem,1.2vw,0.875rem)] text-(--muted) leading-relaxed">
                             <span className="text-(--accent) mr-2">—</span>
                             {b}
                         </li>
@@ -208,30 +208,40 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
             </motion.h2>
             <AccentLine />
             <motion.div
-                className="mt-6 mb-10 max-w-[40vw] flex flex-col gap-2"
+                className="mt-6 mb-10 max-w-full lg:max-w-[40vw] flex flex-col gap-2"
                 style={{ opacity: headerOpacity, y: headerY }}
             >
-                <p className="text-base leading-relaxed text-(--muted) font-mono">
+                <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
                     <span className="text-(--accent) font-mono mr-2">1.</span>
                     I&rsquo;m drawn to work where the gap between{" "}
                     <span className="text-(--foreground) font-medium">building</span> and{" "}
                     <span className="text-(--foreground) font-medium">impact</span> is small.
                 </p>
-                <p className="text-base leading-relaxed text-(--muted) font-mono">
+                <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
                     <span className="text-(--accent) font-mono mr-2">2.</span>
                     My work at <span className="text-(--foreground) font-medium">PwC</span> taught me to listen to{" "}
                     <span className="text-(--foreground) font-medium">data</span>: patterns and trends that tell you
                     what&rsquo;s actually happening.
                 </p>
             </motion.div>
-            <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-[clamp(1rem,3vw,2.5rem)]">
                 {JOBS.map((job, i) => (
                     <JobRow key={job.company} job={job} scrollX={scrollX} inputRange={JOB_RANGES[i]} />
                 ))}
             </div>
 
-            {/* Right half below the minimap — flex keeps the pill/panel centered as it morphs */}
-            <div className="absolute left-[50vw] top-[100px] w-[50vw] h-[calc(100%-100px)] flex items-center justify-center z-10">
+            {/* Mobile resume link — opens PDF in new tab */}
+            <a
+                href="/resume.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block lg:hidden mt-8 w-fit px-5 py-2.5 rounded-full border border-neutral-200 shadow-sm text-sm font-mono text-(--foreground) hover:bg-neutral-50 transition-colors"
+            >
+                Resume ↗
+            </a>
+
+            {/* Desktop resume pill — expand-in-place panel */}
+            <div className="hidden lg:flex absolute left-[50vw] top-[100px] w-[50vw] h-[calc(100%-100px)] items-center justify-center z-10">
                 <ResumePill />
             </div>
         </section>
