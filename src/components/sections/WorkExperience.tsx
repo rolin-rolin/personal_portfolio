@@ -208,7 +208,7 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
             </motion.h2>
             <AccentLine />
             <motion.div
-                className="mt-6 mb-10 max-w-full lg:max-w-[40vw] flex flex-col gap-2"
+                className="mt-6 mb-[clamp(1rem,3vw,2.5rem)] max-w-full lg:max-w-[40vw] flex flex-col gap-2"
                 style={{ opacity: headerOpacity, y: headerY }}
             >
                 <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
