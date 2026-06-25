@@ -226,6 +226,20 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
         if (selectedIndex !== null) setSelectedIndex(null);
     });
 
+    const [stageScale, setStageScale] = React.useState(1);
+    const stageWrapperRef = React.useRef<HTMLDivElement>(null);
+
+    React.useEffect(() => {
+        const el = stageWrapperRef.current;
+        if (!el) return;
+        const ro = new ResizeObserver(([entry]) => {
+            const mobile = window.innerWidth < 1024;
+            setStageScale(Math.min((entry.contentRect.width / STAGE_W) * (mobile ? 0.75 : 1), 1));
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+
     React.useEffect(() => {
         function onKeyDown(e: KeyboardEvent) {
             if (e.key === "Escape") setSelectedIndex(null);
@@ -304,9 +318,9 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
 
     return (
         <section className="h-screen flex flex-col justify-center px-8 md:px-16 lg:px-24">
-            <div className="flex items-stretch gap-6 flex-1 min-h-0">
+            <div className="flex flex-col lg:flex-row lg:items-stretch gap-8 lg:gap-6 lg:flex-1 min-h-0">
                 {/* Left column — title, subtitle, and detail panel overlay */}
-                <div className="flex-[3] relative flex flex-col justify-center min-w-0">
+                <div className="lg:flex-[3] relative flex flex-col lg:justify-center min-w-0">
                     <motion.p
                         className="text-sm font-mono tracking-widest uppercase text-(--muted) mb-4"
                         style={{ opacity: headerOpacity, y: headerY }}
@@ -321,12 +335,12 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                     </motion.h2>
                     <AccentLine />
                     <motion.div className="mt-6 flex flex-col gap-2" style={{ opacity: headerOpacity, y: headerY }}>
-                        <p className="text-base leading-relaxed text-(--muted) font-mono">
+                        <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
                             <span className="text-(--accent) font-mono mr-2">1.</span>I love actually{" "}
                             <span className="text-(--foreground) font-medium">owning</span> my work — scoping, shipping,
                             watching users interact with it, and iterating.
                         </p>
-                        <p className="text-base leading-relaxed text-(--muted) font-mono">
+                        <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
                             <span className="text-(--accent) font-mono mr-2">2.</span>
                             At <span className="text-(--foreground) font-medium">Athena</span>, I learned that while
                             data is great, the best signals come from{" "}
@@ -341,7 +355,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                             <motion.div
                                 ref={detailRef}
                                 key={selectedIndex}
-                                className="absolute inset-y-[10%] -right-[110px] -left-[60px] rounded-[22px] border-[2.5px] border-neutral-900 bg-white overflow-hidden z-10"
+                                className="absolute inset-[5%] lg:inset-y-[10%] lg:-right-[110px] lg:-left-[60px] rounded-[22px] border-[2.5px] border-neutral-900 bg-white overflow-hidden z-10"
                                 initial={{ opacity: 0, scale: 0.97 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.97 }}
@@ -356,62 +370,87 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                     </AnimatePresence>
                 </div>
 
-                {/* Right column — floating card stage */}
-                <div className="flex-[7] flex items-center justify-center min-h-0 min-w-0">
+                {/* Card stage — shown on all sizes, scales to fit */}
+                <div
+                    ref={stageWrapperRef}
+                    className="flex shrink-0 lg:flex-[7] items-center justify-center min-h-0 min-w-0"
+                >
                     <div
-                        ref={stageRef}
-                        className="relative flex-shrink-0 ml-24"
-                        style={{ width: STAGE_W, height: 460 }}
+                        style={{
+                            width: STAGE_W * stageScale,
+                            height: 460 * stageScale,
+                            position: "relative",
+                            flexShrink: 0,
+                        }}
                     >
-                        {PROJECTS.map((p, i) => (
-                            <div
-                                key={p.name}
-                                ref={(el) => {
-                                    cardRefs.current[i] = el;
-                                }}
-                                className="absolute top-0 left-0"
-                                style={{
-                                    width: CW,
-                                    willChange: "transform",
-                                    visibility: selectedIndex === i ? "hidden" : "visible",
-                                }}
-                                onMouseEnter={() => {
-                                    physRef.current[i].wob = true;
-                                    physRef.current[i].wobT = 0;
-                                }}
-                                onMouseLeave={() => {
-                                    physRef.current[i].wob = false;
-                                }}
-                                onClick={() => setSelectedIndex(i)}
-                            >
+                        <div
+                            ref={stageRef}
+                            style={{
+                                width: STAGE_W,
+                                height: 460,
+                                transform: `scale(${stageScale})`,
+                                transformOrigin: "top left",
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                            }}
+                        >
+                            {PROJECTS.map((p, i) => (
                                 <div
-                                    className="rounded-[22px] border-[2.5px] border-neutral-900 cursor-pointer select-none p-[22px]"
-                                    style={{
-                                        backgroundColor: p.bg,
-                                        boxShadow: `4px 4px 0 ${p.accent}`,
+                                    key={p.name}
+                                    ref={(el) => {
+                                        cardRefs.current[i] = el;
                                     }}
+                                    className="absolute top-0 left-0"
+                                    style={{
+                                        width: CW,
+                                        willChange: "transform",
+                                        visibility: selectedIndex === i ? "hidden" : "visible",
+                                    }}
+                                    onMouseEnter={() => {
+                                        physRef.current[i].wob = true;
+                                        physRef.current[i].wobT = 0;
+                                    }}
+                                    onMouseLeave={() => {
+                                        physRef.current[i].wob = false;
+                                    }}
+                                    onClick={() => setSelectedIndex(i)}
                                 >
-                                    <span className="block text-[26px] mb-[11px] leading-none">{p.emoji}</span>
-                                    <div className="font-semibold text-base mb-[5px]" style={{ color: "#1A1A2E" }}>
-                                        {p.name}
-                                    </div>
-                                    <div className="text-[13px] leading-relaxed mb-[14px]" style={{ color: "#44445A" }}>
-                                        {p.desc}
-                                    </div>
-                                    <div className="flex gap-[5px] flex-wrap">
-                                        {p.tags.map((tag) => (
-                                            <span
-                                                key={tag}
-                                                className="text-[11px] font-semibold px-[10px] py-[3px] rounded-full border border-neutral-900"
-                                                style={{ backgroundColor: "rgba(255,255,255,0.7)", color: "#1A1A2E" }}
-                                            >
-                                                {tag}
-                                            </span>
-                                        ))}
+                                    <div
+                                        className="rounded-[22px] border-[2.5px] border-neutral-900 cursor-pointer select-none p-[22px]"
+                                        style={{
+                                            backgroundColor: p.bg,
+                                            boxShadow: `4px 4px 0 ${p.accent}`,
+                                        }}
+                                    >
+                                        <span className="block text-[26px] mb-[11px] leading-none">{p.emoji}</span>
+                                        <div className="font-semibold text-base mb-[5px]" style={{ color: "#1A1A2E" }}>
+                                            {p.name}
+                                        </div>
+                                        <div
+                                            className="text-[13px] leading-relaxed mb-[14px]"
+                                            style={{ color: "#44445A" }}
+                                        >
+                                            {p.desc}
+                                        </div>
+                                        <div className="flex gap-[5px] flex-wrap">
+                                            {p.tags.map((tag) => (
+                                                <span
+                                                    key={tag}
+                                                    className="text-[11px] font-semibold px-[10px] py-[3px] rounded-full border border-neutral-900"
+                                                    style={{
+                                                        backgroundColor: "rgba(255,255,255,0.7)",
+                                                        color: "#1A1A2E",
+                                                    }}
+                                                >
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
