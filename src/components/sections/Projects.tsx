@@ -320,7 +320,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
         <section className="h-screen flex flex-col justify-center px-8 md:px-16 lg:px-24">
             <div className="flex flex-col lg:flex-row lg:items-stretch gap-8 lg:gap-6 lg:flex-1 min-h-0">
                 {/* Left column — title, subtitle, and detail panel overlay */}
-                <div className="lg:flex-[3] relative flex flex-col lg:justify-center min-w-0">
+                <div className="lg:flex-[35] relative flex flex-col lg:justify-center min-w-0">
                     <motion.p
                         className="text-sm font-mono tracking-widest uppercase text-(--muted) mb-4"
                         style={{ opacity: headerOpacity, y: headerY }}
@@ -328,7 +328,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                         Selected Work
                     </motion.p>
                     <motion.h2
-                        className="text-[clamp(3rem,8vw,7rem)] font-semibold leading-[0.9] tracking-tight"
+                        className="text-[clamp(2rem,6vw,7rem)] font-semibold leading-[0.9] tracking-tight"
                         style={{ opacity: headerOpacity, y: headerY }}
                     >
                         Projects
@@ -355,7 +355,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                             <motion.div
                                 ref={detailRef}
                                 key={selectedIndex}
-                                className="absolute inset-[5%] lg:inset-y-[10%] lg:-right-[110px] lg:-left-[60px] rounded-[22px] border-[2.5px] border-neutral-900 bg-white overflow-hidden z-10"
+                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] aspect-[3/4] rounded-[22px] border-[2.5px] border-neutral-900 bg-white overflow-hidden z-10"
                                 initial={{ opacity: 0, scale: 0.97 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.97 }}
@@ -373,7 +373,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                 {/* Card stage — shown on all sizes, scales to fit */}
                 <div
                     ref={stageWrapperRef}
-                    className="flex shrink-0 lg:flex-[7] items-center justify-center min-h-0 min-w-0"
+                    className="flex lg:flex-[65] items-center justify-center min-h-0 min-w-0"
                 >
                     <div
                         style={{
