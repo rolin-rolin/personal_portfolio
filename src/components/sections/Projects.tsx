@@ -355,7 +355,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                             <motion.div
                                 ref={detailRef}
                                 key={selectedIndex}
-                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] aspect-[3/4] rounded-[22px] border-[2.5px] border-neutral-900 bg-white overflow-hidden z-10"
+                                className="absolute inset-[5%] lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-[90%] lg:aspect-[3/4] rounded-[22px] border-[2.5px] border-neutral-900 bg-white overflow-hidden z-10"
                                 initial={{ opacity: 0, scale: 0.97 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.97 }}
