@@ -84,7 +84,7 @@ const NARRATIONS = [
     "still figuring out what this one means",
 ];
 
-export default function ScrollStrip({ progress }: { progress?: MotionValue<number> }) {
+export default function ScrollStrip({ progress, onActivate }: { progress?: MotionValue<number>; onActivate?: () => void }) {
     const detect = useMobileDetect();
     const isMobile = detect.isMobile();
 
@@ -93,6 +93,7 @@ export default function ScrollStrip({ progress }: { progress?: MotionValue<numbe
     const [isInStrip, setIsInStrip] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
+
     const translateX = useMotionValue(STRIP_EXTRA);
 
     useMotionValueEvent(translateX, "change", (v) => {
@@ -129,6 +130,7 @@ export default function ScrollStrip({ progress }: { progress?: MotionValue<numbe
                     setActiveIndex(null);
                     animate(translateX, STRIP_EXTRA, { type: "spring", stiffness: 500, damping: 30 });
                 }
+                if (nowInView && !inView.current) onActivate?.();
                 inView.current = nowInView;
                 setIsInStrip(nowInView);
             },
@@ -229,7 +231,7 @@ export default function ScrollStrip({ progress }: { progress?: MotionValue<numbe
                 {/* Static text overlay — moves with the strip */}
                 <motion.div style={{ x: translateX }} className="absolute inset-0 pointer-events-none">
                     <div
-                        className="absolute top-1/2 -translate-y-1/2 text-right pointer-events-none"
+                        className="absolute top-1/2 -translate-y-1/2 text-right pointer-events-none hidden lg:block"
                         style={{ right: GRID_OVERLAY_RIGHT }}
                     >
                         <p className="font-mono text-sm leading-relaxed text-(--muted) max-w-[220px]">
@@ -250,7 +252,7 @@ export default function ScrollStrip({ progress }: { progress?: MotionValue<numbe
                         {/* Arrow sits at a fixed negative offset from frame 0 — moves with the strip
               so it can never be overlapped by frames no matter how far you scroll */}
                         <motion.span
-                            className="absolute top-1/2 -translate-y-1/2 text-(--accent) text-3xl font-mono select-none pointer-events-none"
+                            className="absolute top-1/2 -translate-y-1/2 text-(--accent) text-3xl font-mono select-none pointer-events-none hidden lg:block"
                             style={{ left: -ARROW_OFFSET }}
                             animate={{ x: [0, 6, 0] }}
                             transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}

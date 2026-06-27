@@ -19,11 +19,11 @@ const SECTIONS = [
 ];
 
 export default function Home() {
-  const { scrollX, seekTo } = useScrollXFromWheel(MAX);
+  const { scrollX, rawX, seekTo } = useScrollXFromWheel(MAX);
 
   const stripProgress = useMotionValue(0);
-  const ballXRaw = useTransform([scrollX, stripProgress], ([sx, sp]) =>
-    (sx as number) < MAX ? (sx as number) : MAX + (sp as number) * 100
+  const ballXRaw = useTransform([scrollX, rawX, stripProgress], ([sx, rx, sp]) =>
+    (rx as number) < MAX ? (sx as number) : MAX + (sp as number) * 100
   );
   const ballX = useSpring(ballXRaw, { stiffness: 1000, damping: 60 });
 
@@ -46,11 +46,11 @@ export default function Home() {
         <div className="w-[100vw] h-full flex-shrink-0">
           <WorkExperience scrollX={scrollX} />
         </div>
-        <div className="w-[100vw] h-full flex-shrink-0">
+        <div className="w-[100vw] h-full flex-shrink-0 overflow-hidden">
           <Projects scrollX={scrollX} />
         </div>
         <div className="w-[100vw] h-full flex-shrink-0" style={{ clipPath: "inset(0 0 0 -50px)" }}>
-          <Miscellaneous stripProgress={stripProgress} />
+          <Miscellaneous stripProgress={stripProgress} onStripActivate={() => seekTo(MAX)} />
         </div>
       </motion.div>
     </main>
