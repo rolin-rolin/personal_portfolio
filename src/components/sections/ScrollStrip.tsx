@@ -88,6 +88,7 @@ export default function ScrollStrip({ progress, onActivate }: { progress?: Motio
     const detect = useMobileDetect();
     const isMobile = detect.isMobile();
 
+
     const [activeIndex, setActiveIndex] = React.useState<null | number>(null);
     const [narrateIndex, setNarrateIndex] = React.useState(0);
     const [isInStrip, setIsInStrip] = React.useState(false);
@@ -203,7 +204,7 @@ export default function ScrollStrip({ progress, onActivate }: { progress?: Motio
                     <AnimatePresence>
                         {isInStrip && (
                             <motion.div
-                                className="fixed top-8 right-8 text-right z-50 pointer-events-none"
+                                className="hidden lg:block fixed top-8 right-8 text-right z-50 pointer-events-none"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
@@ -280,6 +281,31 @@ export default function ScrollStrip({ progress, onActivate }: { progress?: Motio
                         })}
                     </motion.div>
                 </div>
+                {/* Below-lg narration — centered below the expanded frame */}
+                <AnimatePresence>
+                    {activeIndex !== null && (
+                        <motion.div
+                            className="lg:hidden absolute bottom-8 left-1/2 -translate-x-1/2 text-center pointer-events-none"
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            transition={{ duration: 0.35, ease: "easeInOut" }}
+                        >
+                            <AnimatePresence mode="wait">
+                                <motion.p
+                                    key={activeIndex}
+                                    initial={{ opacity: 0, y: 5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -5 }}
+                                    transition={{ duration: 0.35, ease: "easeInOut" }}
+                                    className="font-mono text-sm leading-relaxed text-(--muted) max-w-[260px]"
+                                >
+                                    {NARRATIONS[activeIndex]}
+                                </motion.p>
+                            </AnimatePresence>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </>
     );

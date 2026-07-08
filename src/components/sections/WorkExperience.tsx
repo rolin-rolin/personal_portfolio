@@ -193,7 +193,7 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
     const headerY = useTransform(scrollX, [MAX * 0.0, MAX * 0.2], [24, 0]);
 
     return (
-        <section className="relative h-screen flex flex-col justify-center px-8 md:px-16 lg:px-24">
+        <section className="relative h-screen flex flex-col justify-center px-8 lg:px-24">
             <motion.p
                 className="text-sm font-mono tracking-widest uppercase text-(--muted) mb-6"
                 style={{ opacity: headerOpacity, y: headerY }}

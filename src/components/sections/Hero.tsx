@@ -64,38 +64,18 @@ const subtitleLine: Variants = {
 
 export default function Hero() {
     return (
-        <section className="relative h-screen flex flex-col px-8 md:px-16 lg:px-24 pt-20 pb-6">
+        <section className="relative h-screen flex flex-col px-8 lg:px-24 pt-20 pb-6">
             {/* Main content row */}
             <div className="flex-1 flex items-center gap-12 min-h-0">
                 {/* Left column */}
                 <div className="flex-[3] flex flex-col justify-center min-w-0">
-                    {/* Name + "currently at" badge */}
-                    <div className="flex items-center gap-3 mb-6">
-                        <motion.p
-                            className="text-sm font-mono tracking-widest uppercase text-(--muted)"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                        >
-                            Ronald Lin
-                        </motion.p>
-                        <motion.span
-                            className="text-xs font-mono px-2 py-0.5 border border-(--accent) text-(--accent) rounded-full"
-                            initial={{ opacity: 0, scale: 0.85 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.4, delay: 0.3 }}
-                        >
-                            {CURRENT_ROLE}
-                        </motion.span>
-                    </div>
-
                     {/* Big title — entrance via variant on wrapper, kinetic float on h1 */}
                     <motion.div variants={container} initial="hidden" animate="show">
                         {TITLE_WORDS.map((word, i) => (
                             <div key={word} className="overflow-hidden pb-3">
                                 <motion.div variants={wordVariant}>
                                     <motion.h1
-                                        className="text-[clamp(3rem,20vw,6.5rem)] font-semibold leading-[1] tracking-tight"
+                                        className="text-[clamp(3rem,9.45vw,6.5rem)] font-semibold leading-[1] tracking-tight"
                                         animate={{ y: [0, -5, 0] }}
                                         transition={{
                                             repeat: Infinity,

@@ -41,7 +41,7 @@ export default function LineMinimap({
 
     return (
         <motion.div
-            className="fixed top-10 left-1/2 -translate-x-1/2 z-50 cursor-pointer"
+            className="fixed top-10 left-1/2 -translate-x-1/2 z-50 cursor-pointer scale-[0.85] md:scale-100"
             onPointerMove={onMouseMove}
             onPointerLeave={onMouseLeave}
             onClick={(e) => {
