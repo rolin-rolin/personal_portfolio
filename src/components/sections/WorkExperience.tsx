@@ -170,7 +170,7 @@ function JobRow({
     return (
         <motion.div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-4 lg:gap-8 max-w-full lg:max-w-[45vw]" style={{ opacity, y }}>
             <div>
-                <p className="text-[clamp(0.75rem,1.4vw,1rem)] font-semibold">{job.company}</p>
+                <p className="text-[clamp(0.75rem,1.2vw,1rem)] font-semibold">{job.company}</p>
                 <p className="text-[clamp(0.65rem,1.2vw,0.875rem)] text-(--muted) font-mono mt-1">{job.period}</p>
             </div>
             <div>
@@ -201,7 +201,7 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
                 Work Experience
             </motion.p>
             <motion.h2
-                className="text-[clamp(3rem,8vw,7rem)] font-semibold leading-[0.9] tracking-tight"
+                className="text-[clamp(3rem,7.8vw,6.5rem)] font-semibold leading-[0.9] tracking-tight"
                 style={{ opacity: headerOpacity, y: headerY }}
             >
                 Experience
@@ -211,13 +211,13 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
                 className="mt-6 mb-[clamp(1rem,3vw,2.5rem)] max-w-full lg:max-w-[40vw] flex flex-col gap-2"
                 style={{ opacity: headerOpacity, y: headerY }}
             >
-                <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
+                <p className="text-[clamp(0.75rem,1.2vw,1rem)] leading-relaxed text-(--muted) font-mono">
                     <span className="text-(--accent) font-mono mr-2">1.</span>
                     I&rsquo;m drawn to work where the gap between{" "}
                     <span className="text-(--foreground) font-medium">building</span> and{" "}
                     <span className="text-(--foreground) font-medium">impact</span> is small.
                 </p>
-                <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
+                <p className="text-[clamp(0.75rem,1.2vw,1rem)] leading-relaxed text-(--muted) font-mono">
                     <span className="text-(--accent) font-mono mr-2">2.</span>
                     My work at <span className="text-(--foreground) font-medium">PwC</span> taught me to listen to{" "}
                     <span className="text-(--foreground) font-medium">data</span>: patterns and trends that tell you

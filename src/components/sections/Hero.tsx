@@ -6,16 +6,16 @@ import AccentLine from "@/components/ui/AccentLine";
 import SoccerGame from "@/components/sections/SoccerGame";
 
 const TITLE_WORDS = ["Hi! I'm Ron", "I like to build"];
-const CURRENT_ROLE = "@ University of Notre Dame";
+const CURRENT_ROLE = "currently in San Francisco";
 const SOCIAL_LINKS = [
     { label: "GitHub", href: "https://github.com/rolin-rolin" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/ron-lin" },
     { label: "Email", href: "mailto:rolin71110@gmail.com" },
 ];
 const CURRENTLY = [
-    { label: "reading", value: "TODO" },
-    { label: "listening", value: "TODO" },
-    { label: "building", value: "TODO" },
+    { label: "producing", value: "music (more so beats)" },
+    { label: "transitioning", value: "from trumpet → trombone" },
+    { label: "training", value: "to run fast" },
 ];
 
 const container: Variants = {
@@ -69,13 +69,33 @@ export default function Hero() {
             <div className="flex-1 flex items-center gap-12 min-h-0">
                 {/* Left column */}
                 <div className="flex-[3] flex flex-col justify-center min-w-0">
+                    {/* Name + "currently at" badge */}
+                    <div className="flex items-center gap-3 mb-6">
+                        <motion.p
+                            className="text-sm font-mono tracking-widest uppercase text-(--muted)"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.6, delay: 0.1 }}
+                        >
+                            Ronald Lin
+                        </motion.p>
+                        <motion.span
+                            className="text-xs font-mono px-2 py-0.5 border border-(--accent) text-(--accent) rounded-full"
+                            initial={{ opacity: 0, scale: 0.85 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.4, delay: 0.3 }}
+                        >
+                            {CURRENT_ROLE}
+                        </motion.span>
+                    </div>
+
                     {/* Big title — entrance via variant on wrapper, kinetic float on h1 */}
                     <motion.div variants={container} initial="hidden" animate="show">
                         {TITLE_WORDS.map((word, i) => (
                             <div key={word} className="overflow-hidden pb-3">
                                 <motion.div variants={wordVariant}>
                                     <motion.h1
-                                        className="text-[clamp(3rem,9.45vw,6.5rem)] font-semibold leading-[1] tracking-tight"
+                                        className="text-[clamp(3rem,7.8vw,6.5rem)] font-semibold leading-[1] tracking-tight"
                                         animate={{ y: [0, -5, 0] }}
                                         transition={{
                                             repeat: Infinity,
@@ -107,28 +127,23 @@ export default function Hero() {
                             A little about me
                         </motion.p>
                         <motion.p
-                            className="text-base leading-relaxed text-(--muted) font-mono"
+                            className="text-[clamp(0.875rem,1.2vw,1rem)] leading-relaxed text-(--muted) font-mono"
                             variants={subtitleLine}
                         >
                             I&rsquo;m a rising senior at the{" "}
-                            <span className="text-(--foreground) font-medium">University of Notre Dame</span>{" "}
-                            studying{" "}
-                            <span className="text-(--foreground) font-medium">computer science</span>{" "}
-                            and{" "}
+                            <span className="text-(--foreground) font-medium">University of Notre Dame</span> studying{" "}
+                            <span className="text-(--foreground) font-medium">computer science</span> and{" "}
                             <span className="text-(--foreground) font-medium">economics</span>.
                         </motion.p>
                         <motion.p
-                            className="text-base leading-relaxed text-(--muted) font-mono"
+                            className="text-[clamp(0.875rem,1.2vw,1rem)] leading-relaxed text-(--muted) font-mono"
                             variants={subtitleLine}
                         >
-                            I love{" "}
-                            <span className="text-(--foreground) font-medium">food</span>, making and
-                            listening to{" "}
-                            <span className="text-(--foreground) font-medium">music</span>, every{" "}
-                            <span className="text-(--foreground) font-medium">sport</span> imaginable,
-                            and views (like mountains and stuff) that remind you the{" "}
-                            <span className="text-(--foreground) font-medium">world</span> is absurdly
-                            beautiful.
+                            I love <span className="text-(--foreground) font-medium">food</span>, making and listening
+                            to <span className="text-(--foreground) font-medium">music</span>, every{" "}
+                            <span className="text-(--foreground) font-medium">sport</span> imaginable, and views (like
+                            mountains and stuff) that remind you the{" "}
+                            <span className="text-(--foreground) font-medium">world</span> is absurdly beautiful.
                         </motion.p>
                     </motion.div>
 
@@ -201,6 +216,11 @@ export default function Hero() {
                     </div>
                 </div>
             </div>
+
+            {/* Mobile notice */}
+            <p className="lg:hidden text-xs font-mono text-(--muted) mb-3">
+                for best viewing experience, use a computer pls
+            </p>
 
             {/* Status bar */}
             <motion.div

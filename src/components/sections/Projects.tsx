@@ -328,7 +328,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                         Selected Work
                     </motion.p>
                     <motion.h2
-                        className="text-[clamp(2rem,6vw,7rem)] font-semibold leading-[0.9] tracking-tight"
+                        className="text-[clamp(2rem,6vw,6.5rem)] font-semibold leading-[0.9] tracking-tight"
                         style={{ opacity: headerOpacity, y: headerY }}
                     >
                         Projects

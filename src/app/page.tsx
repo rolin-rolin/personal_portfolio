@@ -33,6 +33,7 @@ export default function Home() {
 
   return (
     <main className="h-screen overflow-hidden">
+
       <LineMinimap
         scrollX={scrollX}
         ballX={ballX}
