@@ -218,9 +218,21 @@ export default function Hero() {
             </div>
 
             {/* Mobile notice */}
-            <p className="lg:hidden text-xs font-mono text-(--muted) mb-3">
+            <motion.p
+                className="lg:hidden text-xs font-mono text-(--muted) mb-3"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, y: [0, -8, 0] }}
+                transition={{
+                    opacity: { duration: 0.6, delay: 2.1 },
+                    y: {
+                        duration: 0.5,
+                        delay: 3,
+                        ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
+                    },
+                }}
+            >
                 for best viewing experience, use a computer pls
-            </p>
+            </motion.p>
 
             {/* Status bar */}
             <motion.div
@@ -231,7 +243,6 @@ export default function Hero() {
                 transition={{ duration: 0.6, delay: 1.5 }}
             >
                 <span>Available for work</span>
-                <span>San Francisco, CA</span> {/* TODO: update location */}
                 <span>© 2026</span>
             </motion.div>
         </section>

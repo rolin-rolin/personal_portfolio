@@ -59,27 +59,27 @@ const PROJECTS = [
     },
     {
         emoji: "✉️",
-        name: "Nudge",
-        desc: "AI email assistant that summarizes threads and drafts replies.",
-        fullDesc:
-            "Nudge plugs into Gmail and uses GPT-4 to surface the most important threads each morning, summarize long conversations into a single paragraph, and suggest reply drafts tuned to your writing style. Learns from accepted vs. discarded suggestions over time.",
-        tags: ["Next.js", "GPT-4", "Gmail API"],
+        name: "app to make rideshare cheaper",
+        desc: "Coming soon.",
+        fullDesc: "Coming soon.",
+        tags: [] as string[],
         bg: "#F5F0FF",
         accent: "#7C3AED",
         links: {},
         images: [] as string[],
+        disabled: true,
     },
     {
         emoji: "🎵",
-        name: "Waveform",
-        desc: "Collaborative music production for remote bands. Real-time sync.",
-        fullDesc:
-            "Waveform gives distributed bands a shared DAW in the browser. Each member's track is streamed via WebRTC with sub-100ms latency. The Web Audio API handles mixing, effects, and a shared metronome. Sessions are recorded server-side and exported as mixed-down MP3 or individual stems.",
-        tags: ["WebRTC", "Web Audio API"],
+        name: "something related to coding workflows",
+        desc: "Coming soon.",
+        fullDesc: "Coming soon.",
+        tags: [] as string[],
         bg: "#FFF0F2",
         accent: "#FF4757",
         links: {},
         images: [] as string[],
+        disabled: true,
     },
 ];
 
@@ -227,6 +227,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
     });
 
     const [stageScale, setStageScale] = React.useState(1);
+    const stageScaleRef = React.useRef(1);
     const stageWrapperRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
@@ -234,7 +235,9 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
         if (!el) return;
         const ro = new ResizeObserver(([entry]) => {
             const mobile = window.innerWidth < 1024;
-            setStageScale(Math.min((entry.contentRect.width / STAGE_W) * (mobile ? 0.75 : 1), 1));
+            const scale = Math.min((entry.contentRect.width / STAGE_W) * (mobile ? 0.75 : 1), 1);
+            stageScaleRef.current = scale;
+            setStageScale(scale);
         });
         ro.observe(el);
         return () => ro.disconnect();
@@ -253,7 +256,8 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
             const stage = stageRef.current;
             if (!stage) return;
             const r = stage.getBoundingClientRect();
-            mouseRef.current = { x: e.clientX - r.left, y: e.clientY - r.top };
+            const scale = stageScaleRef.current;
+            mouseRef.current = { x: (e.clientX - r.left) / scale, y: (e.clientY - r.top) / scale };
         }
         document.addEventListener("mousemove", onMouseMove);
         return () => document.removeEventListener("mousemove", onMouseMove);
@@ -371,10 +375,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                 </div>
 
                 {/* Card stage — shown on all sizes, scales to fit */}
-                <div
-                    ref={stageWrapperRef}
-                    className="flex lg:flex-[65] items-center justify-center min-h-0 min-w-0"
-                >
+                <div ref={stageWrapperRef} className="flex lg:flex-[65] items-center justify-center min-h-0 min-w-0">
                     <div
                         style={{
                             width: STAGE_W * stageScale,
@@ -414,10 +415,12 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                                     onMouseLeave={() => {
                                         physRef.current[i].wob = false;
                                     }}
-                                    onClick={() => setSelectedIndex(i)}
+                                    onClick={p.disabled ? undefined : () => setSelectedIndex(i)}
                                 >
                                     <div
-                                        className="rounded-[22px] border-[2.5px] border-neutral-900 cursor-pointer select-none p-[22px]"
+                                        className={`rounded-[22px] border-[2.5px] border-neutral-900 select-none p-[22px] ${
+                                            p.disabled ? "cursor-default" : "cursor-pointer"
+                                        }`}
                                         style={{
                                             backgroundColor: p.bg,
                                             boxShadow: `4px 4px 0 ${p.accent}`,
@@ -433,20 +436,22 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                                         >
                                             {p.desc}
                                         </div>
-                                        <div className="flex gap-[5px] flex-wrap">
-                                            {p.tags.map((tag) => (
-                                                <span
-                                                    key={tag}
-                                                    className="text-[11px] font-semibold px-[10px] py-[3px] rounded-full border border-neutral-900"
-                                                    style={{
-                                                        backgroundColor: "rgba(255,255,255,0.7)",
-                                                        color: "#1A1A2E",
-                                                    }}
-                                                >
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
+                                        {p.tags.length > 0 && (
+                                            <div className="flex gap-[5px] flex-wrap">
+                                                {p.tags.map((tag) => (
+                                                    <span
+                                                        key={tag}
+                                                        className="text-[11px] font-semibold px-[10px] py-[3px] rounded-full border border-neutral-900"
+                                                        style={{
+                                                            backgroundColor: "rgba(255,255,255,0.7)",
+                                                            color: "#1A1A2E",
+                                                        }}
+                                                    >
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
