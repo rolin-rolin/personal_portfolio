@@ -19,7 +19,7 @@ const PROJECTS = [
         bg: "#F0F0FF",
         accent: "#6366F1",
         links: { github: "https://github.com/rolin-rolin" },
-        images: [] as string[],
+        images: ["/projects/log15_project.png"],
     },
     {
         emoji: "💊",
@@ -31,7 +31,7 @@ const PROJECTS = [
         bg: "#FFF7ED",
         accent: "#F97316",
         links: {},
-        images: [] as string[],
+        images: ["/projects/oapacks_project.png"],
     },
     {
         emoji: "🧬",
@@ -43,7 +43,7 @@ const PROJECTS = [
         bg: "#F0FFF4",
         accent: "#16A34A",
         links: { live: "https://oa-recs.vercel.app" },
-        images: [] as string[],
+        images: ["/projects/oarecs_project_1.png", "/projects/oarecs_project_2.png"],
     },
     {
         emoji: "🗄️",
@@ -55,7 +55,7 @@ const PROJECTS = [
         bg: "#F0F9FF",
         accent: "#0EA5E9",
         links: { live: "https://sqlchat.ai" },
-        images: [] as string[],
+        images: ["/projects/sqlchat_project.png"],
     },
     {
         emoji: "✉️",
@@ -123,7 +123,7 @@ interface PhysState {
 
 function ProjectDetail({ project, onClose }: { project: Project; onClose: () => void }) {
     return (
-        <div className="flex flex-col h-full p-[26px] overflow-y-auto">
+        <div className="h-full overflow-y-scroll p-[26px]">
             <div className="flex items-start justify-between mb-4">
                 <div>
                     <div className="w-[36px] h-[3px] rounded-full mb-3" style={{ backgroundColor: project.accent }} />
@@ -139,17 +139,17 @@ function ProjectDetail({ project, onClose }: { project: Project; onClose: () => 
                 </button>
             </div>
 
-            <p className="text-[13px] leading-relaxed text-[#44445A] mb-5">{project.fullDesc}</p>
+            <p className="text-[13px] leading-relaxed text-[#44445A] mb-4">{project.fullDesc}</p>
 
             {project.images.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto mb-5 pb-1">
+                <div className="flex flex-col gap-3 mb-4">
                     {project.images.map((src, i) => (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                             key={i}
                             src={src}
                             alt={`${project.name} screenshot ${i + 1}`}
-                            className="h-[100px] rounded-[10px] border border-neutral-200 flex-shrink-0"
+                            className="w-full h-auto rounded-[10px] border border-neutral-200"
                         />
                     ))}
                 </div>
@@ -167,7 +167,7 @@ function ProjectDetail({ project, onClose }: { project: Project; onClose: () => 
                 ))}
             </div>
 
-            <div className="flex gap-3 mt-auto">
+            <div className="flex gap-3">
                 {project.links.github && (
                     <a
                         href={project.links.github}
@@ -364,11 +364,9 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.97 }}
                                 transition={{ type: "spring", stiffness: 500, damping: 40, mass: 0.8 }}
+                                onWheel={(e) => e.stopPropagation()}
                             >
-                                <ProjectDetail
-                                    project={PROJECTS[selectedIndex]}
-                                    onClose={() => setSelectedIndex(null)}
-                                />
+                                <ProjectDetail project={PROJECTS[selectedIndex]} onClose={() => setSelectedIndex(null)} />
                             </motion.div>
                         )}
                     </AnimatePresence>

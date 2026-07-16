@@ -223,10 +223,10 @@ export default function Hero() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1, y: [0, -8, 0] }}
                 transition={{
-                    opacity: { duration: 0.6, delay: 2.1 },
+                    opacity: { duration: 0.6, delay: 4 },
                     y: {
                         duration: 0.5,
-                        delay: 3,
+                        delay: 5,
                         ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
                     },
                 }}
