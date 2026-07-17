@@ -102,18 +102,29 @@ export default function ScrollStrip({ progress, onActivate }: { progress?: Motio
         setNarrateIndex(Math.round(clamp((STRIP_EXTRA - v) / FRAME_STEP, [0, FRAMES.length - 1])));
     });
     const containerRef = React.useRef<HTMLDivElement>(null);
-    const wheelEndRef = React.useRef<ReturnType<typeof setTimeout>>();
-
-    // Keyboard navigation
+    const wheelEndRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+    const activeIndexRef = React.useRef<number | null>(null);
     React.useEffect(() => {
+        activeIndexRef.current = activeIndex;
+    }, [activeIndex]);
+
+    // Keyboard navigation — only active while the strip is fully in view, and
+    // only intercepts arrow keys when a frame is actually expanded, so it
+    // never swallows arrow/escape keys meant for the rest of the page.
+    React.useEffect(() => {
+        if (!isInStrip) return;
         function onKeyDown(e: KeyboardEvent) {
-            if (e.key === "Escape") setActiveIndex(null);
+            if (e.key === "Escape") {
+                if (activeIndexRef.current !== null) setActiveIndex(null);
+                return;
+            }
+            if (activeIndexRef.current === null) return;
             if (e.key === "ArrowRight") arrow(1)(e);
             if (e.key === "ArrowLeft") arrow(-1)(e);
         }
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
-    }, []);
+    }, [isInStrip]);
 
     // Non-passive wheel listener — only active when this section is fully
     // in the viewport. IntersectionObserver gates it so that page-level

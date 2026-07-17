@@ -215,6 +215,7 @@ export function useScrollXFromWheel(max: number) {
     const x = useSpring(rawX, { stiffness: 500, damping: 40, mass: 0.8 });
 
     const directionRef = React.useRef<"x" | "y" | null>(null);
+    const directionResetRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
     React.useEffect(() => {
         function handleWheel(e: WheelEvent) {
@@ -233,10 +234,21 @@ export function useScrollXFromWheel(max: number) {
                 const delta = directionRef.current === "x" ? deltaX : deltaY;
                 rawX.set(clamp(rawX.get() + delta * 0.3, [0, max]));
             }
+
+            // Reset the axis lock once the gesture ends, so the next wheel/trackpad
+            // gesture can re-detect direction instead of being stuck on whichever
+            // axis happened to move first, ever.
+            clearTimeout(directionResetRef.current);
+            directionResetRef.current = setTimeout(() => {
+                directionRef.current = null;
+            }, 150);
         }
 
         window.addEventListener("wheel", handleWheel, { passive: false });
-        return () => window.removeEventListener("wheel", handleWheel);
+        return () => {
+            window.removeEventListener("wheel", handleWheel);
+            clearTimeout(directionResetRef.current);
+        };
     }, [max, rawX]);
 
     return { scrollX: x, rawX, seekTo: (v: number) => rawX.set(clamp(v, [0, max])) };

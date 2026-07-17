@@ -106,6 +106,19 @@ function ResumePill() {
             ref={rootRef}
             className="bg-(--background) border border-neutral-200 shadow-lg overflow-hidden flex flex-col"
             onClick={!open ? () => setOpen(true) : undefined}
+            role={!open ? "button" : undefined}
+            tabIndex={!open ? 0 : undefined}
+            aria-label={!open ? "Open resume" : undefined}
+            onKeyDown={
+                !open
+                    ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setOpen(true);
+                          }
+                      }
+                    : undefined
+            }
             style={{ cursor: open ? "default" : "pointer" }}
             initial={false}
             animate={{

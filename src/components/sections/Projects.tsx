@@ -18,7 +18,7 @@ const PROJECTS = [
         tags: ["Tauri", "Rust", "React", "SQLite"],
         bg: "#F0F0FF",
         accent: "#6366F1",
-        links: { github: "https://github.com/rolin-rolin" },
+        links: { github: "https://github.com/rolin-rolin/log15" },
         images: ["/projects/log15_project.png"],
     },
     {
@@ -414,6 +414,19 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                                         physRef.current[i].wob = false;
                                     }}
                                     onClick={p.disabled ? undefined : () => setSelectedIndex(i)}
+                                    role={p.disabled ? undefined : "button"}
+                                    tabIndex={p.disabled ? undefined : 0}
+                                    aria-label={p.disabled ? undefined : `View ${p.name} project details`}
+                                    onKeyDown={
+                                        p.disabled
+                                            ? undefined
+                                            : (e) => {
+                                                  if (e.key === "Enter" || e.key === " ") {
+                                                      e.preventDefault();
+                                                      setSelectedIndex(i);
+                                                  }
+                                              }
+                                    }
                                 >
                                     <div
                                         className={`rounded-[22px] border-[2.5px] border-neutral-900 select-none p-[22px] ${
