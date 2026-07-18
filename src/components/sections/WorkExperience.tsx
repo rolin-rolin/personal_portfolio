@@ -160,8 +160,13 @@ function ResumePill() {
                 </AnimatePresence>
             </div>
 
-            {/* PDF — always mounted, canvas re-renders at liveWidth each frame of the morph */}
-            <div ref={scrollRef} className="flex-1 overflow-y-scroll overflow-x-hidden flex justify-center p-4">
+            {/* PDF — always mounted, canvas re-renders at liveWidth each frame of the morph.
+                inert when collapsed so its annotation-layer links/canvas can't steal Tab focus. */}
+            <div
+                ref={scrollRef}
+                className="flex-1 overflow-y-scroll overflow-x-hidden flex justify-center p-4"
+                inert={!open}
+            >
                 <ResumePdf file={RESUME_PDF} width={contentW} />
             </div>
         </motion.div>
