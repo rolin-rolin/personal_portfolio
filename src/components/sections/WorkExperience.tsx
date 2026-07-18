@@ -231,15 +231,16 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
             >
                 <p className="text-[clamp(0.75rem,1.2vw,1rem)] leading-relaxed text-(--muted) font-mono">
                     <span className="text-(--accent) font-mono mr-2">1.</span>
-                    I&rsquo;m drawn to work where the gap between{" "}
-                    <span className="text-(--foreground) font-medium">building</span> and{" "}
-                    <span className="text-(--foreground) font-medium">impact</span> is small.
+                    At <span className="text-(--foreground) font-medium">Athena</span>, I learned that the best
+                    signals come from{" "}
+                    <span className="text-(--foreground) font-medium">field work</span>: direct interactions with
+                    users that tell you what no other metric can quite tell you.
                 </p>
                 <p className="text-[clamp(0.75rem,1.2vw,1rem)] leading-relaxed text-(--muted) font-mono">
                     <span className="text-(--accent) font-mono mr-2">2.</span>
-                    My work at <span className="text-(--foreground) font-medium">PwC</span> taught me to listen to{" "}
-                    <span className="text-(--foreground) font-medium">data</span>: patterns and trends that tell you
-                    what&rsquo;s actually happening.
+                    My work at <span className="text-(--foreground) font-medium">PwC</span> taught me that{" "}
+                    <span className="text-(--foreground) font-medium">data</span> is field work at scale, and it can
+                    hold so many patterns and trends that tell us what&rsquo;s happening on average.
                 </p>
             </motion.div>
             <div className="flex flex-col gap-[clamp(1rem,3vw,2.5rem)]">

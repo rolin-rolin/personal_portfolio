@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "motion/react";
+import { REVEAL_DELAY } from "@/components/sections/LineMinimap";
 
 // ─── Physics constants ────────────────────────────────────────────────────────
 const GRAVITY        = 0.28;   // px/frame²
@@ -867,13 +869,16 @@ export default function SoccerGame() {
         className="w-full h-full"
         style={{ cursor: gameState === "playing" ? "none" : "default" }}
       />
-      <button
+      <motion.button
         onClick={toggleHardMode}
         className="absolute bottom-2 right-3 font-mono text-[10px] text-(--muted) hover:text-(--foreground) transition-colors px-2 py-1 rounded border border-transparent hover:border-[rgba(0,0,0,0.12)]"
         style={{ zIndex: 10 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: REVEAL_DELAY }}
       >
         {hardMode ? "normal mode" : "hard mode"}
-      </button>
+      </motion.button>
       {mounted && hardMode && createPortal(
         <canvas
           ref={overlayRef}

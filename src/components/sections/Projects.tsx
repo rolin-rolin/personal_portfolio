@@ -22,7 +22,7 @@ const PROJECTS = [
         images: ["/projects/log15_project.png"],
     },
     {
-        emoji: "💊",
+        emoji: "💪",
         name: "OAPacks",
         desc: "Bootstrapping a sports nutrition startup — first $625 in 3 days of door-to-door sales.",
         fullDesc:
@@ -58,7 +58,7 @@ const PROJECTS = [
         images: ["/projects/sqlchat_project.png"],
     },
     {
-        emoji: "✉️",
+        emoji: "🚕",
         name: "app to make rideshare cheaper",
         desc: "Coming soon.",
         fullDesc: "Coming soon.",
@@ -70,7 +70,7 @@ const PROJECTS = [
         disabled: true,
     },
     {
-        emoji: "🎵",
+        emoji: "⚙️",
         name: "something related to coding workflows",
         desc: "Coming soon.",
         fullDesc: "Coming soon.",
@@ -126,8 +126,6 @@ function ProjectDetail({ project, onClose }: { project: Project; onClose: () => 
         <div className="h-full overflow-y-scroll p-[26px]">
             <div className="flex items-start justify-between mb-4">
                 <div>
-                    <div className="w-[36px] h-[3px] rounded-full mb-3" style={{ backgroundColor: project.accent }} />
-                    <span className="text-[28px] leading-none block mb-2">{project.emoji}</span>
                     <h3 className="text-[20px] font-semibold text-[#1A1A2E] leading-tight">{project.name}</h3>
                 </div>
                 <button
@@ -340,16 +338,15 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                     <AccentLine />
                     <motion.div className="mt-6 flex flex-col gap-2" style={{ opacity: headerOpacity, y: headerY }}>
                         <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
-                            <span className="text-(--accent) font-mono mr-2">1.</span>I love actually{" "}
-                            <span className="text-(--foreground) font-medium">owning</span> my work — scoping, shipping,
-                            watching users interact with it, and iterating.
+                            <span className="text-(--accent) font-mono mr-2">1.</span>
+                            I&rsquo;m drawn to work where the gap between{" "}
+                            <span className="text-(--foreground) font-medium">building</span> and{" "}
+                            <span className="text-(--foreground) font-medium">impact</span> is small.
                         </p>
                         <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
-                            <span className="text-(--accent) font-mono mr-2">2.</span>
-                            At <span className="text-(--foreground) font-medium">Athena</span>, I learned that while
-                            data is great, the best signals come from{" "}
-                            <span className="text-(--foreground) font-medium">field work</span>: direct conversations
-                            with users that tell you what no metric can.
+                            <span className="text-(--accent) font-mono mr-2">2.</span>I love actually{" "}
+                            <span className="text-(--foreground) font-medium">owning</span> my work — scoping, shipping,
+                            watching users interact with it, and iterating.
                         </p>
                     </motion.div>
 

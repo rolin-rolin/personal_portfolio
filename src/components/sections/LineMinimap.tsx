@@ -18,6 +18,11 @@ export const MAX = LINE_STEP * (LINE_COUNT - 1);
 export const DEFAULT_INTENSITY = 3.5;
 export const DISTANCE_LIMIT = 48;
 
+// Entrance timing: fires 1s after the (delayed) social links start revealing
+// in Hero. Shared by anything meant to appear alongside the minimap/ball
+// (the scroll hint, the hard-mode toggle).
+export const REVEAL_DELAY = 2.9;
+
 export function lerp(start: number, end: number, factor: number): number {
     return start + (end - start) * factor;
 }
@@ -39,12 +44,27 @@ export default function LineMinimap({
 
     const sectionIndices = new Set(sections.map((s) => Math.round(s.scrollX / LINE_STEP)));
 
+    // Motion doesn't reliably delay non-numeric CSS values (like pointerEvents)
+    // through animate/transition the way it does numeric ones — it can apply
+    // the final value immediately on hydration instead of waiting. A plain
+    // timer keyed to the same reveal moment is deterministic.
+    const [interactive, setInteractive] = React.useState(false);
+    React.useEffect(() => {
+        const t = setTimeout(() => setInteractive(true), (REVEAL_DELAY + 0.6) * 1000);
+        return () => clearTimeout(t);
+    }, []);
+
     return (
         <motion.div
             className="fixed top-10 left-1/2 -translate-x-1/2 z-50 cursor-pointer scale-[0.85] md:scale-100"
+            style={{ pointerEvents: interactive ? "auto" : "none" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: REVEAL_DELAY }}
             onPointerMove={onMouseMove}
             onPointerLeave={onMouseLeave}
             onClick={(e) => {
+                if (!interactive) return;
                 const rect = e.currentTarget.getBoundingClientRect();
                 const offsetX = e.clientX - rect.left;
                 const mappedScrollX = (offsetX / (LINE_STEP * (LINE_COUNT - 1))) * MAX;
@@ -61,6 +81,7 @@ export default function LineMinimap({
                             key={s.label}
                             className="absolute -top-7 text-[10px] font-mono uppercase tracking-widest text-(--muted) hover:text-(--foreground) transition-colors cursor-pointer"
                             style={{ left: s.scrollX, transform: "translateX(-50%)" }}
+                            disabled={!interactive}
                             onClick={(e) => {
                                 e.stopPropagation();
                                 seekTo(s.scrollX);
@@ -214,8 +235,9 @@ export function useScrollXFromWheel(max: number) {
     const rawX = useMotionValue(0);
     const x = useSpring(rawX, { stiffness: 500, damping: 40, mass: 0.8 });
 
+    // Whichever axis the user scrolls first locks in for good — no re-detection,
+    // no reset, so horizontal/vertical can never alternate mid-use.
     const directionRef = React.useRef<"x" | "y" | null>(null);
-    const directionResetRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
     React.useEffect(() => {
         function handleWheel(e: WheelEvent) {
@@ -234,21 +256,10 @@ export function useScrollXFromWheel(max: number) {
                 const delta = directionRef.current === "x" ? deltaX : deltaY;
                 rawX.set(clamp(rawX.get() + delta * 0.3, [0, max]));
             }
-
-            // Reset the axis lock once the gesture ends, so the next wheel/trackpad
-            // gesture can re-detect direction instead of being stuck on whichever
-            // axis happened to move first, ever.
-            clearTimeout(directionResetRef.current);
-            directionResetRef.current = setTimeout(() => {
-                directionRef.current = null;
-            }, 150);
         }
 
         window.addEventListener("wheel", handleWheel, { passive: false });
-        return () => {
-            window.removeEventListener("wheel", handleWheel);
-            clearTimeout(directionResetRef.current);
-        };
+        return () => window.removeEventListener("wheel", handleWheel);
     }, [max, rawX]);
 
     return { scrollX: x, rawX, seekTo: (v: number) => rawX.set(clamp(v, [0, max])) };

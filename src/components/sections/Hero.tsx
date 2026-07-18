@@ -4,6 +4,7 @@ import { motion, type Variants } from "motion/react";
 import { BlurReveal } from "@/components/ui/BlurReveal";
 import AccentLine from "@/components/ui/AccentLine";
 import SoccerGame from "@/components/sections/SoccerGame";
+import { REVEAL_DELAY } from "@/components/sections/LineMinimap";
 
 const TITLE_WORDS = ["Hi! I'm Ron", "I like to build"];
 const CURRENT_ROLE = "currently in San Francisco";
@@ -150,7 +151,7 @@ export default function Hero() {
                     {/* Social links */}
                     <div className="mt-8 flex items-center gap-6">
                         {SOCIAL_LINKS.map((link, i) => (
-                            <BlurReveal key={link.label} delay={900 + i * 150}>
+                            <BlurReveal key={link.label} delay={1900 + i * 150}>
                                 <a
                                     href={link.href}
                                     target="_blank"
@@ -163,12 +164,12 @@ export default function Hero() {
                         ))}
                     </div>
 
-                    {/* Scroll hint */}
+                    {/* Scroll hint — appears alongside the line minimap */}
                     <motion.div
                         className="mt-10 flex items-center gap-3 text-sm text-(--muted)"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 1.2, duration: 0.6 }}
+                        transition={{ delay: REVEAL_DELAY, duration: 0.6 }}
                     >
                         <motion.div
                             className="w-5 h-8 rounded-full border border-(--muted) flex items-start justify-center pt-1.5"
