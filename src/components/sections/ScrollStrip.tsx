@@ -84,10 +84,15 @@ const NARRATIONS = [
     "still figuring out what this one means",
 ];
 
-export default function ScrollStrip({ progress, onActivate }: { progress?: MotionValue<number>; onActivate?: () => void }) {
+export default function ScrollStrip({
+    progress,
+    onActivate,
+}: {
+    progress?: MotionValue<number>;
+    onActivate?: () => void;
+}) {
     const detect = useMobileDetect();
     const isMobile = detect.isMobile();
-
 
     const [activeIndex, setActiveIndex] = React.useState<null | number>(null);
     const [narrateIndex, setNarrateIndex] = React.useState(0);
@@ -247,8 +252,9 @@ export default function ScrollStrip({ progress, onActivate }: { progress?: Motio
                         style={{ right: GRID_OVERLAY_RIGHT }}
                     >
                         <p className="font-mono text-sm leading-relaxed text-(--muted) max-w-[220px]">
-                            this is also a quiet archive —<br />
-                            moments i didn&rsquo;t want to forget.
+                            this is also a quiet archive
+                            <br />
+                            highlights from my camera roll
                         </p>
                     </div>
                 </motion.div>
