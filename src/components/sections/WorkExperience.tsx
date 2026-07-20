@@ -11,21 +11,21 @@ const ResumePdf = dynamic(() => import("@/components/ui/ResumePdf"), { ssr: fals
 
 const JOBS = [
     {
+        company: "Athena (Acquired)",
+        role: "Founding Software Engineer",
+        period: "May 2024 — Dec. 2025",
+        bullets: [
+            "Data pipeline cut essay transcription time 10×; auth feature cut account fraud 5×.",
+            "Social strategy: 200k+ views, 50% DAU lift; led ops, managed team of 8.",
+        ],
+    },
+    {
         company: "PricewaterhouseCoopers",
         role: "Technology and Data Solutions Intern",
         period: "June 2025 — Aug. 2025",
         bullets: [
             "Personalization algo for 7M+ users; 40% retention lift.",
             "Monte Carlo model: 2× revenue/employee uplift for client.",
-        ],
-    },
-    {
-        company: "Athena (Acquired)",
-        role: "Founding Software Engineering Intern",
-        period: "May 2024 — Aug. 2024",
-        bullets: [
-            "Data pipeline increased throughput 10×; auth cut account fraud 5×.",
-            "Social media content: 100k+ views; grew daily active users 50%.",
         ],
     },
     {
