@@ -227,18 +227,33 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
     const [stageScale, setStageScale] = React.useState(1);
     const stageScaleRef = React.useRef(1);
     const stageWrapperRef = React.useRef<HTMLDivElement>(null);
+    const leftColRef = React.useRef<HTMLDivElement>(null);
 
+    // Available height is measured directly (viewport minus the title/blurb column's own
+    // height) rather than from the stage wrapper's own box, which would just report back
+    // its own scaled size — a circular measurement that can't detect genuine slack.
     React.useEffect(() => {
-        const el = stageWrapperRef.current;
-        if (!el) return;
-        const ro = new ResizeObserver(([entry]) => {
+        function recompute() {
+            const wrapperEl = stageWrapperRef.current;
+            if (!wrapperEl) return;
+            const width = wrapperEl.getBoundingClientRect().width;
             const mobile = window.innerWidth < 1024;
-            const scale = Math.min((entry.contentRect.width / STAGE_W) * (mobile ? 0.75 : 1), 1);
+            const leftHeight = leftColRef.current?.getBoundingClientRect().height ?? 0;
+            const availHeight = mobile ? window.innerHeight - leftHeight - 32 /* gap-8 */ : Infinity;
+            const scale = Math.min(width / STAGE_W, availHeight / 460, 1);
             stageScaleRef.current = scale;
             setStageScale(scale);
-        });
-        ro.observe(el);
-        return () => ro.disconnect();
+        }
+
+        recompute();
+        const ro = new ResizeObserver(recompute);
+        if (stageWrapperRef.current) ro.observe(stageWrapperRef.current);
+        if (leftColRef.current) ro.observe(leftColRef.current);
+        window.addEventListener("resize", recompute);
+        return () => {
+            ro.disconnect();
+            window.removeEventListener("resize", recompute);
+        };
     }, []);
 
     React.useEffect(() => {
@@ -322,28 +337,28 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
         <section className="h-screen flex flex-col justify-center px-8 lg:px-24">
             <div className="flex flex-col lg:flex-row lg:items-stretch gap-8 lg:gap-6 lg:flex-1 min-h-0">
                 {/* Left column — title, subtitle, and detail panel overlay */}
-                <div className="lg:flex-[35] relative flex flex-col lg:justify-center min-w-0">
+                <div ref={leftColRef} className="lg:flex-[35] relative flex flex-col lg:justify-center min-w-0">
                     <motion.p
-                        className="text-sm font-mono tracking-widest uppercase text-(--muted) mb-4"
+                        className="text-sm font-mono tracking-widest uppercase text-(--muted) mb-4 max-[480px]:mb-2"
                         style={{ opacity: headerOpacity, y: headerY }}
                     >
                         Selected Work
                     </motion.p>
                     <motion.h2
-                        className="text-[clamp(2rem,6vw,6.5rem)] font-semibold leading-[0.9] tracking-tight"
+                        className="text-[clamp(1.75rem,8vw,3.84rem)] lg:text-[clamp(2rem,6vw,6.5rem)] font-semibold leading-[0.9] tracking-tight"
                         style={{ opacity: headerOpacity, y: headerY }}
                     >
                         Projects
                     </motion.h2>
                     <AccentLine />
-                    <motion.div className="mt-6 flex flex-col gap-2" style={{ opacity: headerOpacity, y: headerY }}>
-                        <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
+                    <motion.div className="mt-6 max-[480px]:mt-3 flex flex-col gap-2" style={{ opacity: headerOpacity, y: headerY }}>
+                        <p className="text-[clamp(0.75rem,3.5vw,0.9rem)] lg:text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
                             <span className="text-(--accent) font-mono mr-2">1.</span>
                             I&rsquo;m drawn to work where the gap between{" "}
                             <span className="text-(--foreground) font-medium">building</span> and{" "}
                             <span className="text-(--foreground) font-medium">impact</span> is small.
                         </p>
-                        <p className="text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
+                        <p className="text-[clamp(0.75rem,3.5vw,0.9rem)] lg:text-[clamp(0.75rem,1.4vw,1rem)] leading-relaxed text-(--muted) font-mono">
                             <span className="text-(--accent) font-mono mr-2">2.</span>I love actually{" "}
                             <span className="text-(--foreground) font-medium">owning</span> my work — scoping, shipping,
                             watching users interact with it, and iterating.

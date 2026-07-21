@@ -54,10 +54,49 @@ export default function LineMinimap({
         return () => clearTimeout(t);
     }, []);
 
+    // Measures our own rendered footprint (post-transform, via getBoundingClientRect) so
+    // other sections can reserve exactly enough top clearance to clear us, rather than
+    // guessing a constant that drifts whenever this component's size changes.
+    const rootRef = React.useRef<HTMLDivElement>(null);
+    React.useEffect(() => {
+        function measure() {
+            const el = rootRef.current;
+            if (!el) return;
+            const bottom = el.getBoundingClientRect().bottom;
+            document.documentElement.style.setProperty("--minimap-safe-top", `${Math.ceil(bottom) + 16}px`);
+            window.dispatchEvent(new Event("minimap-safe-top-change"));
+        }
+        measure();
+        const ro = new ResizeObserver(measure);
+        if (rootRef.current) ro.observe(rootRef.current);
+        window.addEventListener("resize", measure);
+        return () => {
+            ro.disconnect();
+            window.removeEventListener("resize", measure);
+        };
+    }, []);
+
+    // Scale the whole bar down just enough that the ball's max travel (past the
+    // last tick, where "keep it rollin" reveals) always stays within the
+    // viewport with a safety margin — instead of a fixed two-tier scale that
+    // still clips the text on real phones.
+    const [navScale, setNavScale] = React.useState(1);
+    React.useEffect(() => {
+        function recomputeScale() {
+            const margin = 16;
+            const raw = (window.innerWidth / 2 - margin) / RIGHTMOST_FROM_CENTER;
+            setNavScale(Math.min(1, Math.max(0.5, raw)));
+        }
+        recomputeScale();
+        window.addEventListener("resize", recomputeScale);
+        return () => window.removeEventListener("resize", recomputeScale);
+    }, []);
+
     return (
         <motion.div
-            className="fixed top-10 left-1/2 -translate-x-1/2 z-50 cursor-pointer scale-[0.85] md:scale-100"
-            style={{ pointerEvents: interactive ? "auto" : "none" }}
+            ref={rootRef}
+            className="fixed top-10 left-1/2 z-50 cursor-pointer"
+            style={{ transform: `translateX(-50%) scale(${navScale})`, pointerEvents: interactive ? "auto" : "none" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: REVEAL_DELAY }}
@@ -258,8 +297,42 @@ export function useScrollXFromWheel(max: number) {
             }
         }
 
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+
+        function handleTouchStart(e: TouchEvent) {
+            lastTouchX = e.touches[0].clientX;
+            lastTouchY = e.touches[0].clientY;
+        }
+
+        function handleTouchMove(e: TouchEvent) {
+            const touch = e.touches[0];
+            const deltaX = lastTouchX - touch.clientX;
+            const deltaY = lastTouchY - touch.clientY;
+            lastTouchX = touch.clientX;
+            lastTouchY = touch.clientY;
+
+            if (!directionRef.current) {
+                if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+                    directionRef.current = Math.abs(deltaX) > Math.abs(deltaY) ? "x" : "y";
+                }
+            }
+
+            if (directionRef.current) {
+                e.preventDefault();
+                const delta = directionRef.current === "x" ? deltaX : deltaY;
+                rawX.set(clamp(rawX.get() + delta, [0, max]));
+            }
+        }
+
         window.addEventListener("wheel", handleWheel, { passive: false });
-        return () => window.removeEventListener("wheel", handleWheel);
+        window.addEventListener("touchstart", handleTouchStart, { passive: true });
+        window.addEventListener("touchmove", handleTouchMove, { passive: false });
+        return () => {
+            window.removeEventListener("wheel", handleWheel);
+            window.removeEventListener("touchstart", handleTouchStart);
+            window.removeEventListener("touchmove", handleTouchMove);
+        };
     }, [max, rawX]);
 
     return { scrollX: x, rawX, seekTo: (v: number) => rawX.set(clamp(v, [0, max])) };
@@ -295,6 +368,25 @@ const ROLLIN_LETTERS = "keep it rollin".split("");
 
 // Large enough to never clip the text on the right
 const ROLLIN_CONTAINER_W = 200;
+
+// How far past the last tick the ball travels while the strip section plays
+// out (mirrors the `MAX + stripProgress * 100` formula in page.tsx — exported
+// so both places share one number instead of drifting apart).
+export const BALL_OVERSHOOT = 100;
+const BALL_MAX_X = MAX + BALL_OVERSHOOT;
+
+// Rightmost point (in this component's local, unscaled coordinate space) that
+// can ever need to be visible: either the ball at its max travel, or the
+// "keep it rollin" text's visible edge at that same point (it isn't fully
+// revealed by BALL_MAX_X, so its right edge is whatever's actually clipped in).
+const ROLLIN_VISIBLE_RIGHT_EDGE =
+    ROLLIN_TEXT_LEFT + Math.min(ROLLIN_CONTAINER_W, Math.max(0, BALL_MAX_X - BALL_RADIUS - ROLLIN_TEXT_LEFT));
+const RIGHTMOST_LOCAL_X = Math.max(BALL_MAX_X + BALL_RADIUS, ROLLIN_VISIBLE_RIGHT_EDGE);
+
+// The nav bar's own box (the line row) is centered via `left-1/2` +
+// `translateX(-50%)`, so everything scales around its horizontal center.
+const NAV_BOX_WIDTH = LINE_STEP * (LINE_COUNT - 1) + LINE_WIDTH;
+const RIGHTMOST_FROM_CENTER = RIGHTMOST_LOCAL_X - NAV_BOX_WIDTH / 2;
 
 function RollinText({ x }: { x: MotionValue<number> }) {
     // clipPath inset from the right: shrinks as ball moves right, revealing text left-to-right

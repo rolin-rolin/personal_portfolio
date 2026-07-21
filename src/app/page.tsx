@@ -9,6 +9,7 @@ import Miscellaneous from "@/components/sections/Miscellaneous";
 import LineMinimap, {
   useScrollXFromWheel,
   MAX,
+  BALL_OVERSHOOT,
 } from "@/components/sections/LineMinimap";
 
 const SECTIONS = [
@@ -50,7 +51,7 @@ export default function Home() {
 
   const stripProgress = useMotionValue(0);
   const ballXRaw = useTransform([scrollX, rawX, stripProgress], ([sx, rx, sp]) =>
-    (rx as number) < MAX ? (sx as number) : MAX + (sp as number) * 100
+    (rx as number) < MAX ? (sx as number) : MAX + (sp as number) * BALL_OVERSHOOT
   );
   const ballX = useSpring(ballXRaw, { stiffness: 1000, damping: 60 });
 

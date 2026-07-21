@@ -5,6 +5,7 @@
   --foreground: #171717;
   --accent: #ff4d00;
   --muted: #737373;
+  --minimap-safe-top: 5rem;
 }
 
 @theme inline {
