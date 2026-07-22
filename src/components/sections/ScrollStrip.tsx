@@ -110,8 +110,8 @@ const FRAMES: FrameSource[] = [
     video("/scroll-strip/IMG_9708.mp4", "/scroll-strip/IMG_9708_poster.jpg"),
     image("/scroll-strip/IMG_9656.jpg"),
     image("/scroll-strip/IMG_9723.jpg"),
-    image("/scroll-strip/IMG_3896.jpg"),
     image("/scroll-strip/IMG_3959.jpg"),
+    image("/scroll-strip/IMG_3896.jpg"),
 ];
 
 // How many frames on either side of the current scroll position get their
@@ -119,31 +119,31 @@ const FRAMES: FrameSource[] = [
 const LAZY_LOAD_WINDOW = 2;
 
 const NARRATIONS = [
-    "first morning in kyoto, before anyone else was awake",
-    "my dog doing the thing where she stares at nothing",
-    "the light through my apartment at 4pm in november",
-    "a meal that took three hours and was gone in twenty minutes",
-    "the hiking trail we almost turned back on",
-    "a city i didn't expect to love",
-    "golden hour that lasted exactly four minutes",
-    "the kind of quiet you only get on long drives",
-    "our corner table at the spot we went to every week",
-    "the view from the roof we weren't supposed to be on",
-    "catching the last train by thirty seconds",
-    "a friend who always orders too much food",
-    "the beach before the crowd showed up",
-    "a weekend trip that turned into a week",
-    "a coffee shop i never found again",
-    "the moment right before it started raining",
-    "somewhere in the mountains, no signal, didn't matter",
-    "the cat near the market that trusted no one",
-    "a sunset that felt like it was just for us",
-    "the apartment we lived in when everything changed",
-    "three in the morning and we were still talking",
-    "the garden we stumbled into by accident",
-    "a bookstore with no particular system",
-    "the last day of something good",
-    "still figuring out what this one means",
+    "felt like lying down in the grass, looked up and saw this",
+    "most devoted bean tourists",
+    "squirrels getting too comfortable or maybe i smell odd",
+    "foggy night at a country club. those rays of light are from a streetlight",
+    "2025 summer, holy setup",
+    "night game at nd, never watched college football prior to this",
+    "at levi's stadium for my first concert ever, weeknd concert but there for carti",
+    "clearest i've ever seen the stars. i need to go to norway",
+    "went off trail to cool down",
+    "antelope canyon, talked with our tour guide, a navajo (diné) man, about his nation's traditions",
+    "sunset on lake michigan, it was windy and kinda cold",
+    "deer getting destroyed by lake superior, i probably scared it by getting too close :(",
+    "very vibey jazz bar in chicago",
+    "monkey appreciating the views of lake tahoe for eternity",
+    "drove 4 hours to pictured rocks and i choose to take videos like this",
+    "that's the moon",
+    "alaska - probably the most beautiful place i've been",
+    "blowing bubbles with a nice view",
+    "the light breaks free from the clouds' holds",
+    "i don't see anything at the end of that rainbow.",
+    "time stood still here. i could've stayed here for hours",
+    "dream house honestly minus the mosquitoes",
+    "glacier gardens in juneau",
+    "sf at sunset",
+    "sf at night",
 ];
 
 export default function ScrollStrip({
@@ -158,8 +158,16 @@ export default function ScrollStrip({
     const isNarrowViewport = useIsMobileViewport();
 
     const dims = React.useMemo(() => getDims(isNarrowViewport ? MOBILE_SCALE : 1), [isNarrowViewport]);
-    const { FRAME_HEIGHT, FRAME_DIFF_CENTER, FRAME_GAP, FRAME_STEP, ARROW_OFFSET, STRIP_EXTRA, STRIP_INDENT, GRID_OVERLAY_RIGHT } =
-        dims;
+    const {
+        FRAME_HEIGHT,
+        FRAME_DIFF_CENTER,
+        FRAME_GAP,
+        FRAME_STEP,
+        ARROW_OFFSET,
+        STRIP_EXTRA,
+        STRIP_INDENT,
+        GRID_OVERLAY_RIGHT,
+    } = dims;
     const STRIP_MAX = FRAME_STEP * (FRAMES.length - 1);
 
     const [activeIndex, setActiveIndex] = React.useState<null | number>(null);
@@ -207,12 +215,12 @@ export default function ScrollStrip({
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [isInStrip]);
 
-    // Non-passive wheel listener — only active when this section is fully
-    // in the viewport. IntersectionObserver gates it so that page-level
+    // Non-passive wheel/touch listeners — only active when this section is
+    // fully in the viewport. IntersectionObserver gates it so that page-level
     // transitions (Projects → ScrollStrip) are never hijacked mid-flight.
     React.useEffect(() => {
         const el = containerRef.current;
-        if (!el || isMobile) return;
+        if (!el) return;
 
         const inView = { current: false };
 
@@ -253,14 +261,81 @@ export default function ScrollStrip({
             }, 150);
         }
 
-        el.addEventListener("wheel", handleWheel, { passive: false });
+        // Touch dragging — mirrors the wheel handler above but decides its
+        // direction once per gesture from the first meaningful move: a
+        // horizontal drag moves the strip (and stops propagation so the
+        // page-level touch handler in LineMinimap never also treats it as
+        // section navigation); a vertical drag is left untouched so it still
+        // navigates between page sections, same as it always has.
+        let touchId: number | null = null;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTranslate = 0;
+        let touchDirection: "x" | "y" | null = null;
+
+        function handleTouchStart(e: TouchEvent) {
+            if (!inView.current) return;
+            const touch = e.touches[0];
+            touchId = touch.identifier;
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchStartTranslate = translateX.get();
+            touchDirection = null;
+        }
+
+        function handleTouchMove(e: TouchEvent) {
+            if (touchId === null || !inView.current) return;
+            const touch = Array.from(e.changedTouches).find((t) => t.identifier === touchId);
+            if (!touch) return;
+
+            const dx = touch.clientX - touchStartX;
+            const dy = touch.clientY - touchStartY;
+
+            if (!touchDirection) {
+                if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; // not enough movement yet to tell
+                touchDirection = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+            }
+            if (touchDirection !== "x") return; // vertical — let the page handle it
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            translateX.stop();
+            translateX.set(clamp(touchStartTranslate + dx, [-STRIP_MAX + STRIP_EXTRA, STRIP_EXTRA]));
+            setActiveIndex(null);
+        }
+
+        function handleTouchEnd(e: TouchEvent) {
+            if (touchId === null) return;
+            const wasHorizontal = touchDirection === "x";
+            touchId = null;
+            touchDirection = null;
+            if (!wasHorizontal) return;
+
+            e.stopPropagation();
+            const index = Math.round(clamp((STRIP_EXTRA - translateX.get()) / FRAME_STEP, [0, FRAMES.length - 1]));
+            setActiveIndex(index);
+        }
+
+        if (!isMobile) el.addEventListener("wheel", handleWheel, { passive: false });
+        if (isMobile) {
+            el.addEventListener("touchstart", handleTouchStart, { passive: true });
+            el.addEventListener("touchmove", handleTouchMove, { passive: false });
+            el.addEventListener("touchend", handleTouchEnd, { passive: true });
+            el.addEventListener("touchcancel", handleTouchEnd, { passive: true });
+        }
+
         return () => {
             el.removeEventListener("wheel", handleWheel);
+            el.removeEventListener("touchstart", handleTouchStart);
+            el.removeEventListener("touchmove", handleTouchMove);
+            el.removeEventListener("touchend", handleTouchEnd);
+            el.removeEventListener("touchcancel", handleTouchEnd);
             observer.disconnect();
         };
         // STRIP_MAX/STRIP_EXTRA/FRAME_STEP are derived from `dims`, which changes
-        // when the mobile/desktop scale flips — the handler must be rebuilt with
-        // fresh values then, or it clamps/derives activeIndex using stale (wrong-
+        // when the mobile/desktop scale flips — the handlers must be rebuilt with
+        // fresh values then, or they clamp/derive activeIndex using stale (wrong-
         // scale) geometry while frames render at the new scale.
     }, [isMobile, translateX, STRIP_MAX, STRIP_EXTRA, FRAME_STEP]);
 
