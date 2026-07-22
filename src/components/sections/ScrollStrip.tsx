@@ -277,6 +277,32 @@ export default function ScrollStrip({
         let lastTouchY = 0;
         let didDrag = false;
 
+        // MotionValue.getVelocity() only looks at the delta between the last
+        // two .set() calls — right at lift-off that's often the smallest,
+        // slowest sample of the whole gesture (finger decelerating, or the
+        // final touchmove just landing a moment before touchend), so it badly
+        // undersells how fast the swipe actually was. Tracking our own short
+        // window of recent samples and measuring across the whole window
+        // gives a release velocity that actually reflects the flick.
+        const VELOCITY_WINDOW_MS = 100;
+        let velocitySamples: { t: number; x: number }[] = [];
+
+        function sampleVelocity() {
+            const now = performance.now();
+            velocitySamples.push({ t: now, x: translateX.get() });
+            while (velocitySamples.length > 1 && now - velocitySamples[0].t > VELOCITY_WINDOW_MS) {
+                velocitySamples.shift();
+            }
+        }
+
+        function releaseVelocity() {
+            if (velocitySamples.length < 2) return 0;
+            const first = velocitySamples[0];
+            const last = velocitySamples[velocitySamples.length - 1];
+            const dt = last.t - first.t;
+            return dt > 0 ? ((last.x - first.x) / dt) * 1000 : 0;
+        }
+
         function handleTouchStart(e: TouchEvent) {
             if (!inView.current) return;
             const touch = e.touches[0];
@@ -284,6 +310,7 @@ export default function ScrollStrip({
             lastTouchX = touch.clientX;
             lastTouchY = touch.clientY;
             didDrag = false;
+            velocitySamples = [{ t: performance.now(), x: translateX.get() }];
         }
 
         function handleTouchMove(e: TouchEvent) {
@@ -309,6 +336,7 @@ export default function ScrollStrip({
             translateX.set(clamp(current - delta, [-STRIP_MAX + STRIP_EXTRA, STRIP_EXTRA]));
             setActiveIndex(null);
             didDrag = true;
+            sampleVelocity();
         }
 
         function handleTouchEnd(e: TouchEvent) {
@@ -328,7 +356,7 @@ export default function ScrollStrip({
             // the nearest frame, so exactly one photo opens once it settles.
             animate(translateX, translateX.get(), {
                 type: "inertia",
-                velocity: translateX.getVelocity(),
+                velocity: releaseVelocity(),
                 min: -STRIP_MAX + STRIP_EXTRA,
                 max: STRIP_EXTRA,
                 modifyTarget: (v) => {
