@@ -261,26 +261,27 @@ export default function ScrollStrip({
             }, 150);
         }
 
-        // Touch dragging — mirrors the wheel handler above but decides its
-        // direction once per gesture from the first meaningful move: a
-        // horizontal drag moves the strip (and stops propagation so the
-        // page-level touch handler in LineMinimap never also treats it as
-        // section navigation); a vertical drag is left untouched so it still
-        // navigates between page sections, same as it always has.
+        // Touch dragging — mirrors the wheel handler above (same "whichever axis
+        // moved more this event, with boundary passthrough" logic) so either a
+        // horizontal or a vertical swipe drives the strip. This matters because
+        // the page-level scroller (LineMinimap's useScrollXFromWheel) locks its
+        // own axis on the very first swipe of the session and never resets — if
+        // that happens to be vertical, the strip still needs to respond to
+        // vertical swipes to stay consistent with how the rest of the page is
+        // being navigated. Same as the wheel handler, once the strip hits its
+        // start/end bound we stop intercepting so the page can take over.
         let touchId: number | null = null;
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchStartTranslate = 0;
-        let touchDirection: "x" | "y" | null = null;
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+        let didDrag = false;
 
         function handleTouchStart(e: TouchEvent) {
             if (!inView.current) return;
             const touch = e.touches[0];
             touchId = touch.identifier;
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            touchStartTranslate = translateX.get();
-            touchDirection = null;
+            lastTouchX = touch.clientX;
+            lastTouchY = touch.clientY;
+            didDrag = false;
         }
 
         function handleTouchMove(e: TouchEvent) {
@@ -288,29 +289,31 @@ export default function ScrollStrip({
             const touch = Array.from(e.changedTouches).find((t) => t.identifier === touchId);
             if (!touch) return;
 
-            const dx = touch.clientX - touchStartX;
-            const dy = touch.clientY - touchStartY;
+            const dx = lastTouchX - touch.clientX;
+            const dy = lastTouchY - touch.clientY;
+            lastTouchX = touch.clientX;
+            lastTouchY = touch.clientY;
 
-            if (!touchDirection) {
-                if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return; // not enough movement yet to tell
-                touchDirection = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
-            }
-            if (touchDirection !== "x") return; // vertical — let the page handle it
+            const delta = Math.abs(dx) > Math.abs(dy) ? dx : dy;
+            const current = translateX.get();
+
+            if (delta > 0 && current <= -STRIP_MAX + STRIP_EXTRA) return; // end — let page handle
+            if (delta < 0 && current >= STRIP_EXTRA) return; // start — let page handle
 
             e.preventDefault();
             e.stopPropagation();
 
             translateX.stop();
-            translateX.set(clamp(touchStartTranslate + dx, [-STRIP_MAX + STRIP_EXTRA, STRIP_EXTRA]));
+            translateX.set(clamp(current - delta, [-STRIP_MAX + STRIP_EXTRA, STRIP_EXTRA]));
             setActiveIndex(null);
+            didDrag = true;
         }
 
         function handleTouchEnd(e: TouchEvent) {
             if (touchId === null) return;
-            const wasHorizontal = touchDirection === "x";
             touchId = null;
-            touchDirection = null;
-            if (!wasHorizontal) return;
+            if (!didDrag) return;
+            didDrag = false;
 
             e.stopPropagation();
             const index = Math.round(clamp((STRIP_EXTRA - translateX.get()) / FRAME_STEP, [0, FRAMES.length - 1]));

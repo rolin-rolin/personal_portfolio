@@ -60,7 +60,7 @@ export default function Home() {
   const x = useTransform(scrollX, (v) => `-${(Math.min(v, MAX) / MAX) * 300}vw`);
 
   return (
-    <main ref={mainRef} className="h-screen overflow-hidden">
+    <main ref={mainRef} className="h-dvh overflow-hidden">
 
       <LineMinimap
         scrollX={scrollX}

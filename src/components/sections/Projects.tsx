@@ -334,7 +334,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
     const headerY = useTransform(scrollX, [MAX * 0.3, MAX * 0.52], [24, 0]);
 
     return (
-        <section className="h-screen flex flex-col justify-center px-8 lg:px-24">
+        <section className="h-full flex flex-col justify-center px-8 lg:px-24">
             <div className="flex flex-col lg:flex-row lg:items-stretch gap-8 lg:gap-6 lg:flex-1 min-h-0">
                 {/* Left column — title, subtitle, and detail panel overlay */}
                 <div ref={leftColRef} className="lg:flex-[35] relative flex flex-col lg:justify-center min-w-0">
@@ -377,6 +377,7 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                                 exit={{ opacity: 0, scale: 0.97 }}
                                 transition={{ type: "spring", stiffness: 500, damping: 40, mass: 0.8 }}
                                 onWheel={(e) => e.stopPropagation()}
+                                onTouchMove={(e) => e.stopPropagation()}
                             >
                                 <ProjectDetail project={PROJECTS[selectedIndex]} onClose={() => setSelectedIndex(null)} />
                             </motion.div>

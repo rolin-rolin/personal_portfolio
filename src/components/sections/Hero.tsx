@@ -65,7 +65,7 @@ const subtitleLine: Variants = {
 
 export default function Hero() {
     return (
-        <section className="relative h-screen flex flex-col px-8 lg:px-24 pt-20 pb-6">
+        <section className="relative h-full flex flex-col px-8 lg:px-24 pt-20 pb-6">
             {/* Main content row */}
             <div className="flex-1 flex items-center gap-12 min-h-0">
                 {/* Left column */}
@@ -96,7 +96,7 @@ export default function Hero() {
                             <div key={word} className="overflow-hidden pb-3">
                                 <motion.div variants={wordVariant}>
                                     <motion.h1
-                                        className="text-[clamp(3rem,7.8vw,6.5rem)] font-semibold leading-[1] tracking-tight"
+                                        className="text-[clamp(2.25rem,min(7.8vw,9dvh),6.5rem)] font-semibold leading-[1] tracking-tight"
                                         animate={{ y: [0, -5, 0] }}
                                         transition={{
                                             repeat: Infinity,

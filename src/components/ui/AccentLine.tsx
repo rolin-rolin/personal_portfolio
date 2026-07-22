@@ -17,7 +17,7 @@ export default function AccentLine() {
 
     return (
         <motion.div
-            className="h-[3px] w-32 mt-8 origin-left"
+            className="h-[3px] w-32 mt-8 max-[480px]:mt-3 origin-left"
             style={{ background: accentGradient }}
             initial={{ scaleX: 0 }}
             animate={{ scaleX: 1 }}

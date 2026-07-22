@@ -186,14 +186,14 @@ function JobRow({
     const y = useTransform(scrollX, inputRange, [16, 0]);
 
     return (
-        <motion.div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-4 max-[480px]:gap-2 lg:gap-8 max-w-full lg:max-w-[45vw]" style={{ opacity, y }}>
+        <motion.div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-4 max-[480px]:gap-1 lg:gap-8 max-w-full lg:max-w-[45vw]" style={{ opacity, y }}>
             <div>
                 <p className="text-[clamp(0.75rem,1.2vw,1rem)] font-semibold">{job.company}</p>
-                <p className="text-[clamp(0.65rem,1.2vw,0.875rem)] text-(--muted) font-mono mt-1">{job.period}</p>
+                <p className="text-[clamp(0.65rem,1.2vw,0.875rem)] text-(--muted) font-mono mt-1 max-[480px]:mt-0.5">{job.period}</p>
             </div>
             <div>
-                <p className="text-[clamp(0.65rem,1.2vw,0.875rem)] font-mono text-(--muted) uppercase tracking-widest mb-2">{job.role}</p>
-                <ul className="space-y-1">
+                <p className="text-[clamp(0.65rem,1.2vw,0.875rem)] font-mono text-(--muted) uppercase tracking-widest mb-2 max-[480px]:mb-1">{job.role}</p>
+                <ul className="space-y-1 max-[480px]:space-y-0.5">
                     {job.bullets.map((b) => (
                         <li key={b} className="text-[clamp(0.65rem,1.2vw,0.875rem)] text-(--muted) leading-relaxed">
                             <span className="text-(--accent) mr-2">—</span>
@@ -211,22 +211,22 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
     const headerY = useTransform(scrollX, [MAX * 0.0, MAX * 0.2], [24, 0]);
 
     return (
-        <section className="relative h-screen flex flex-col justify-center pt-(--minimap-safe-top) lg:pt-0 px-8 lg:px-24">
+        <section className="relative h-full flex flex-col justify-center pt-(--minimap-safe-top) lg:pt-0 px-8 lg:px-24">
             <motion.p
-                className="text-sm font-mono tracking-widest uppercase text-(--muted) mb-6 max-[480px]:mb-3"
+                className="text-sm font-mono tracking-widest uppercase text-(--muted) mb-6 max-[480px]:mb-2"
                 style={{ opacity: headerOpacity, y: headerY }}
             >
                 Work Experience
             </motion.p>
             <motion.h2
-                className="text-[clamp(3rem,7.8vw,6.5rem)] font-semibold leading-[0.9] tracking-tight max-[480px]:text-[2.25rem]"
+                className="text-[clamp(2.25rem,min(7.8vw,9dvh),6.5rem)] font-semibold leading-[0.9] tracking-tight"
                 style={{ opacity: headerOpacity, y: headerY }}
             >
                 Experience
             </motion.h2>
             <AccentLine />
             <motion.div
-                className="mt-6 mb-[clamp(1rem,3vw,2.5rem)] max-w-full lg:max-w-[40vw] flex flex-col gap-2 max-[480px]:mt-3 max-[480px]:mb-4"
+                className="mt-6 mb-[clamp(1rem,3vw,2.5rem)] max-w-full lg:max-w-[40vw] flex flex-col gap-2 max-[480px]:mt-2 max-[480px]:mb-2 max-[480px]:gap-1"
                 style={{ opacity: headerOpacity, y: headerY }}
             >
                 <p className="text-[clamp(0.75rem,1.2vw,1rem)] leading-relaxed text-(--muted) font-mono">
@@ -242,7 +242,7 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
                     patterns no single interaction can.
                 </p>
             </motion.div>
-            <div className="flex flex-col gap-[clamp(1rem,3vw,2.5rem)] max-[480px]:gap-3">
+            <div className="flex flex-col gap-[clamp(1rem,3vw,2.5rem)] max-[480px]:gap-2">
                 {JOBS.map((job, i) => (
                     <JobRow key={job.company} job={job} scrollX={scrollX} inputRange={JOB_RANGES[i]} />
                 ))}
@@ -253,7 +253,7 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
                 href="/resume.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block lg:hidden mt-8 max-[480px]:mt-4 w-fit px-5 py-2.5 rounded-full border border-neutral-200 shadow-sm text-sm font-mono text-(--foreground) hover:bg-neutral-50 transition-colors"
+                className="block lg:hidden mt-8 max-[480px]:mt-3 w-fit px-5 py-2.5 max-[480px]:px-4 max-[480px]:py-1.5 rounded-full border border-neutral-200 shadow-sm text-sm font-mono text-(--foreground) hover:bg-neutral-50 transition-colors"
             >
                 Resume ↗
             </a>
