@@ -15,46 +15,108 @@ import {
 } from "motion/react";
 import { clamp } from "@/lib/clamp";
 import { useMobileDetect } from "@/lib/useMobileDetect";
+import { useIsMobileViewport } from "@/lib/useIsMobileViewport";
 
-export const FRAME_WIDTH = 72;
-export const FRAME_WIDTH_EXPANDED = 480;
-export const FRAME_HEIGHT = FRAME_WIDTH * 4;
-export const FRAME_HEIGHT_EXPANDED = 680;
-export const FRAME_WIDTH_DIFF = FRAME_WIDTH_EXPANDED - FRAME_WIDTH;
-export const FRAME_HEIGHT_DIFF = FRAME_HEIGHT_EXPANDED - FRAME_HEIGHT;
-export const FRAME_GAP = 16;
-export const FRAME_DIFF_CENTER = FRAME_WIDTH_DIFF / 2;
-export const FRAME_STEP = FRAME_GAP + FRAME_WIDTH;
+// All strip geometry is derived from a single scale factor so that on
+// narrow viewports every position, gap, and animation target shrinks
+// together and stays internally consistent — scaling any of this via CSS
+// instead (independent of the JS math below) is what desynced the drag
+// bounds / clip-path / spring targets from the rendered size last time.
+const MOBILE_SCALE = 0.55;
 
-// Layout constants for the arrow and strip positioning.
-// ARROW_OFFSET: how far left of frame 0 the arrow sits (px).
-// STRIP_EXTRA:  extra pixels to shift the entire strip toward the left edge.
-// ARROW_GAP:    equal breathing-room gap on each side of the arrow.
-// ─────────────────────────────────────────────────────────────────────────
-//   [grid right edge] ──(ARROW_GAP)── [arrow] ──(ARROW_GAP)── [frame 0]
-// ─────────────────────────────────────────────────────────────────────────
-const ARROW_OFFSET = 80;
-const STRIP_EXTRA = 50;
-const STRIP_INDENT = FRAME_DIFF_CENTER + FRAME_STEP / 2 + STRIP_EXTRA; // = 298
-const ARROW_GAP = ARROW_OFFSET + FRAME_GAP / 2; // = 88
-// Grid's right edge, expressed as CSS `right` from the viewport right edge.
-const GRID_OVERLAY_RIGHT = `calc(50vw + ${STRIP_INDENT + ARROW_OFFSET + ARROW_GAP}px)`;
+function getDims(scale: number) {
+    const FRAME_WIDTH = 72 * scale;
+    const FRAME_WIDTH_EXPANDED = 480 * scale;
+    const FRAME_HEIGHT = FRAME_WIDTH * 4;
+    const FRAME_HEIGHT_EXPANDED = 680 * scale;
+    const FRAME_WIDTH_DIFF = FRAME_WIDTH_EXPANDED - FRAME_WIDTH;
+    const FRAME_HEIGHT_DIFF = FRAME_HEIGHT_EXPANDED - FRAME_HEIGHT;
+    const FRAME_GAP = 16 * scale;
+    const FRAME_DIFF_CENTER = FRAME_WIDTH_DIFF / 2;
+    const FRAME_STEP = FRAME_GAP + FRAME_WIDTH;
 
-// Placeholder gradients — swap these out for real <Image> imports
-const BASE_FRAMES: [string, string][] = [
-    ["#8b7355", "#3d2e1a"],
-    ["#3d6b7e", "#1a2f3d"],
-    ["#5c7a3e", "#27361a"],
-    ["#7e5c6b", "#3d1f2b"],
-    ["#6b6b3d", "#2e2e1a"],
-    ["#3d5c7e", "#1a2733"],
-    ["#7e6b3d", "#3d2e1a"],
-    ["#5c3d7e", "#271a3d"],
-    ["#3d7e6b", "#1a3d2e"],
+    // Layout constants for the arrow and strip positioning.
+    // ARROW_OFFSET: how far left of frame 0 the arrow sits (px).
+    // STRIP_EXTRA:  extra pixels to shift the entire strip toward the left edge.
+    // ARROW_GAP:    equal breathing-room gap on each side of the arrow.
+    // ─────────────────────────────────────────────────────────────────────
+    //   [grid right edge] ──(ARROW_GAP)── [arrow] ──(ARROW_GAP)── [frame 0]
+    // ─────────────────────────────────────────────────────────────────────
+    const ARROW_OFFSET = 80 * scale;
+    const STRIP_EXTRA = 50 * scale;
+    const STRIP_INDENT = FRAME_DIFF_CENTER + FRAME_STEP / 2 + STRIP_EXTRA;
+    const ARROW_GAP = ARROW_OFFSET + FRAME_GAP / 2;
+    // Grid's right edge, expressed as CSS `right` from the viewport right edge.
+    const GRID_OVERLAY_RIGHT = `calc(50vw + ${STRIP_INDENT + ARROW_OFFSET + ARROW_GAP}px)`;
+
+    return {
+        FRAME_WIDTH,
+        FRAME_WIDTH_EXPANDED,
+        FRAME_HEIGHT,
+        FRAME_HEIGHT_EXPANDED,
+        FRAME_WIDTH_DIFF,
+        FRAME_HEIGHT_DIFF,
+        FRAME_GAP,
+        FRAME_DIFF_CENTER,
+        FRAME_STEP,
+        ARROW_OFFSET,
+        STRIP_EXTRA,
+        STRIP_INDENT,
+        ARROW_GAP,
+        GRID_OVERLAY_RIGHT,
+    };
+}
+
+type Dims = ReturnType<typeof getDims>;
+
+interface FrameSource {
+    type: "image" | "video";
+    src: string;
+    poster?: string;
+}
+
+function image(src: string): FrameSource {
+    return { type: "image", src };
+}
+
+function video(src: string, poster: string): FrameSource {
+    return { type: "video", src, poster };
+}
+
+// Videos always render their poster frame; the actual <video> only mounts
+// once the frame is active or scrolled near (see LAZY_LOAD_WINDOW below),
+// so we're not streaming all 7 clips just because they're in the strip.
+const FRAMES: FrameSource[] = [
+    image("/scroll-strip/IMG_0196.jpg"),
+    image("/scroll-strip/IMG_0434.JPEG"),
+    video("/scroll-strip/IMG_1913.mp4", "/scroll-strip/IMG_1913_poster.jpg"),
+    image("/scroll-strip/IMG_0743.jpg"),
+    image("/scroll-strip/IMG_2220.jpg"),
+    video("/scroll-strip/IMG_2789.mp4", "/scroll-strip/IMG_2789_poster.jpg"),
+    image("/scroll-strip/IMG_2360.jpg"),
+    image("/scroll-strip/IMG_3033.jpg"),
+    video("/scroll-strip/IMG_2867.mp4", "/scroll-strip/IMG_2867_poster.jpg"),
+    image("/scroll-strip/IMG_3425.jpg"),
+    image("/scroll-strip/IMG_3719.jpg"),
+    video("/scroll-strip/IMG_2951.mp4", "/scroll-strip/IMG_2951_poster.jpg"),
+    image("/scroll-strip/IMG_8530_jpg.JPEG"),
+    image("/scroll-strip/IMG_9471.jpg"),
+    video("/scroll-strip/IMG_2999.mp4", "/scroll-strip/IMG_2999_poster.jpg"),
+    image("/scroll-strip/IMG_9482.jpg"),
+    image("/scroll-strip/IMG_9587.jpg"),
+    video("/scroll-strip/IMG_9638.mp4", "/scroll-strip/IMG_9638_poster.jpg"),
+    image("/scroll-strip/IMG_9625.jpg"),
+    image("/scroll-strip/IMG_9628.jpg"),
+    video("/scroll-strip/IMG_9708.mp4", "/scroll-strip/IMG_9708_poster.jpg"),
+    image("/scroll-strip/IMG_9656.jpg"),
+    image("/scroll-strip/IMG_9723.jpg"),
+    image("/scroll-strip/IMG_3896.jpg"),
+    image("/scroll-strip/IMG_3959.jpg"),
 ];
 
-const FRAMES = [...BASE_FRAMES, ...BASE_FRAMES, ...BASE_FRAMES, ...BASE_FRAMES].slice(0, 25);
-const STRIP_MAX = FRAME_STEP * (FRAMES.length - 1);
+// How many frames on either side of the current scroll position get their
+// <video> mounted. Everything outside this window just shows its poster.
+const LAZY_LOAD_WINDOW = 2;
 
 const NARRATIONS = [
     "first morning in kyoto, before anyone else was awake",
@@ -93,6 +155,12 @@ export default function ScrollStrip({
 }) {
     const detect = useMobileDetect();
     const isMobile = detect.isMobile();
+    const isNarrowViewport = useIsMobileViewport();
+
+    const dims = React.useMemo(() => getDims(isNarrowViewport ? MOBILE_SCALE : 1), [isNarrowViewport]);
+    const { FRAME_HEIGHT, FRAME_DIFF_CENTER, FRAME_GAP, FRAME_STEP, ARROW_OFFSET, STRIP_EXTRA, STRIP_INDENT, GRID_OVERLAY_RIGHT } =
+        dims;
+    const STRIP_MAX = FRAME_STEP * (FRAMES.length - 1);
 
     const [activeIndex, setActiveIndex] = React.useState<null | number>(null);
     const [narrateIndex, setNarrateIndex] = React.useState(0);
@@ -101,6 +169,14 @@ export default function ScrollStrip({
     React.useEffect(() => setMounted(true), []);
 
     const translateX = useMotionValue(STRIP_EXTRA);
+
+    // Re-snap the strip whenever the geometry scale changes (e.g. crossing
+    // the mobile breakpoint) so translateX/activeIndex stay in sync with
+    // the new frame sizes instead of animating from stale pixel offsets.
+    React.useEffect(() => {
+        translateX.set(activeIndex === null ? STRIP_EXTRA : -activeIndex * FRAME_STEP + STRIP_EXTRA);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dims]);
 
     useMotionValueEvent(translateX, "change", (v) => {
         progress?.set((STRIP_EXTRA - v) / STRIP_MAX);
@@ -182,7 +258,11 @@ export default function ScrollStrip({
             el.removeEventListener("wheel", handleWheel);
             observer.disconnect();
         };
-    }, [isMobile, translateX]);
+        // STRIP_MAX/STRIP_EXTRA/FRAME_STEP are derived from `dims`, which changes
+        // when the mobile/desktop scale flips — the handler must be rebuilt with
+        // fresh values then, or it clamps/derives activeIndex using stale (wrong-
+        // scale) geometry while frames render at the new scale.
+    }, [isMobile, translateX, STRIP_MAX, STRIP_EXTRA, FRAME_STEP]);
 
     // Animate translateX when activeIndex changes (click or arrow keys)
     React.useEffect(() => {
@@ -277,22 +357,46 @@ export default function ScrollStrip({
                         >
                             →
                         </motion.span>
-                        {FRAMES.map((gradient, i) => {
+                        {FRAMES.map((frame, i) => {
                             const active = activeIndex === i;
+                            const shouldLoadVideo = active || Math.abs(i - narrateIndex) <= LAZY_LOAD_WINDOW;
                             return (
                                 <Frame
                                     key={i}
                                     active={active}
+                                    dims={dims}
                                     onClick={() => setActiveIndex(i === activeIndex ? null : i)}
                                     animate={{ x: x(i) }}
                                     style={{ left: `${i * FRAME_STEP + FRAME_GAP / 2}px` }}
                                 >
-                                    <div
-                                        className="pointer-events-none h-full w-full select-none"
-                                        style={{
-                                            background: `linear-gradient(to bottom, ${gradient[0]}, ${gradient[1]})`,
-                                        }}
-                                    />
+                                    {frame.type === "video" ? (
+                                        shouldLoadVideo ? (
+                                            <video
+                                                src={frame.src}
+                                                poster={frame.poster}
+                                                className="pointer-events-none h-full w-full select-none object-cover"
+                                                autoPlay
+                                                loop
+                                                muted
+                                                playsInline
+                                                preload="metadata"
+                                            />
+                                        ) : (
+                                            // eslint-disable-next-line @next/next/no-img-element
+                                            <img
+                                                src={frame.poster}
+                                                alt=""
+                                                className="pointer-events-none h-full w-full select-none object-cover"
+                                            />
+                                        )
+                                    ) : (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img
+                                            src={frame.src}
+                                            alt=""
+                                            className="pointer-events-none h-full w-full select-none object-cover"
+                                        />
+                                    )}
                                 </Frame>
                             );
                         })}
@@ -331,18 +435,20 @@ export default function ScrollStrip({
 interface FrameProps {
     children: React.ReactNode;
     active: boolean;
+    dims: Dims;
     animate?: TargetAndTransition;
     style?: React.CSSProperties;
     onClick?: () => void;
 }
 
-function Frame({ children, active, animate: animateProp, style, ...props }: FrameProps) {
+function Frame({ children, active, dims, animate: animateProp, style, ...props }: FrameProps) {
+    const { FRAME_DIFF_CENTER, FRAME_HEIGHT_EXPANDED, FRAME_HEIGHT, FRAME_HEIGHT_DIFF, FRAME_WIDTH_EXPANDED } = dims;
     const clip = useSpring(FRAME_DIFF_CENTER, { stiffness: 500, damping: 50 });
 
     React.useEffect(() => {
         clip.set(active ? 0 : FRAME_DIFF_CENTER);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [active]);
+    }, [active, FRAME_DIFF_CENTER]);
 
     return (
         <motion.div
