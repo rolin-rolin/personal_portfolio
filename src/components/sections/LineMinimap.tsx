@@ -196,7 +196,6 @@ function Line({
                 width: LINE_WIDTH,
                 height,
                 scaleY,
-                transformOrigin: "bottom",
             }}
         />
     );

@@ -166,7 +166,7 @@ export default function Hero() {
 
                     {/* Scroll hint — appears alongside the line minimap */}
                     <motion.div
-                        className="mt-10 flex items-center gap-3 text-sm text-(--muted)"
+                        className="hidden lg:flex mt-10 items-center gap-3 text-sm text-(--muted)"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: REVEAL_DELAY, duration: 0.6 }}

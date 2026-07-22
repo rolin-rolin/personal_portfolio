@@ -83,35 +83,36 @@ function video(src: string, poster: string): FrameSource {
     return { type: "video", src, poster };
 }
 
-// Videos always render their poster frame; the actual <video> only mounts
-// once the frame is active or scrolled near (see LAZY_LOAD_WINDOW below),
-// so we're not streaming all 7 clips just because they're in the strip.
+// Two mirrored directories hold identical filenames: /scroll-strip is
+// compressed for phones (weaker CPUs, metered data), /scroll-strip-hq is the
+// original quality for desktop. Which one renders is decided per-session by
+// device detection (see `mediaDir` in the component below), not baked in here.
 const FRAMES: FrameSource[] = [
-    image("/scroll-strip/IMG_0196.jpg"),
-    image("/scroll-strip/IMG_0434.JPEG"),
-    video("/scroll-strip/IMG_1913.mp4", "/scroll-strip/IMG_1913_poster.jpg"),
-    image("/scroll-strip/IMG_0743.jpg"),
-    image("/scroll-strip/IMG_2220.jpg"),
-    video("/scroll-strip/IMG_2789.mp4", "/scroll-strip/IMG_2789_poster.jpg"),
-    image("/scroll-strip/IMG_2360.jpg"),
-    image("/scroll-strip/IMG_3033.jpg"),
-    video("/scroll-strip/IMG_2867.mp4", "/scroll-strip/IMG_2867_poster.jpg"),
-    image("/scroll-strip/IMG_3425.jpg"),
-    image("/scroll-strip/IMG_3719.jpg"),
-    video("/scroll-strip/IMG_2951.mp4", "/scroll-strip/IMG_2951_poster.jpg"),
-    image("/scroll-strip/IMG_8530_jpg.JPEG"),
-    image("/scroll-strip/IMG_9471.jpg"),
-    video("/scroll-strip/IMG_2999.mp4", "/scroll-strip/IMG_2999_poster.jpg"),
-    image("/scroll-strip/IMG_9482.jpg"),
-    image("/scroll-strip/IMG_9587.jpg"),
-    video("/scroll-strip/IMG_9638.mp4", "/scroll-strip/IMG_9638_poster.jpg"),
-    image("/scroll-strip/IMG_9625.jpg"),
-    image("/scroll-strip/IMG_9628.jpg"),
-    video("/scroll-strip/IMG_9708.mp4", "/scroll-strip/IMG_9708_poster.jpg"),
-    image("/scroll-strip/IMG_9656.jpg"),
-    image("/scroll-strip/IMG_9723.jpg"),
-    image("/scroll-strip/IMG_3959.jpg"),
-    image("/scroll-strip/IMG_3896.jpg"),
+    image("IMG_0196.jpg"),
+    image("IMG_0434.JPEG"),
+    video("IMG_1913.mp4", "IMG_1913_poster.jpg"),
+    image("IMG_0743.jpg"),
+    image("IMG_2220.jpg"),
+    video("IMG_2789.mp4", "IMG_2789_poster.jpg"),
+    image("IMG_2360.jpg"),
+    image("IMG_3033.jpg"),
+    video("IMG_2867.mp4", "IMG_2867_poster.jpg"),
+    image("IMG_3425.jpg"),
+    image("IMG_3719.jpg"),
+    video("IMG_2951.mp4", "IMG_2951_poster.jpg"),
+    image("IMG_8530_jpg.JPEG"),
+    image("IMG_9471.jpg"),
+    video("IMG_2999.mp4", "IMG_2999_poster.jpg"),
+    image("IMG_9482.jpg"),
+    image("IMG_9587.jpg"),
+    video("IMG_9638.mp4", "IMG_9638_poster.jpg"),
+    image("IMG_9625.jpg"),
+    image("IMG_9628.jpg"),
+    video("IMG_9708.mp4", "IMG_9708_poster.jpg"),
+    image("IMG_9656.jpg"),
+    image("IMG_9723.jpg"),
+    image("IMG_3959.jpg"),
+    image("IMG_3896.jpg"),
 ];
 
 // How many frames on either side of the current scroll position get their
@@ -156,6 +157,7 @@ export default function ScrollStrip({
     const detect = useMobileDetect();
     const isMobile = detect.isMobile();
     const isNarrowViewport = useIsMobileViewport();
+    const mediaDir = isMobile ? "/scroll-strip" : "/scroll-strip-hq";
 
     const dims = React.useMemo(() => getDims(isNarrowViewport ? MOBILE_SCALE : 1), [isNarrowViewport]);
     const {
@@ -316,8 +318,30 @@ export default function ScrollStrip({
             didDrag = false;
 
             e.stopPropagation();
-            const index = Math.round(clamp((STRIP_EXTRA - translateX.get()) / FRAME_STEP, [0, FRAMES.length - 1]));
-            setActiveIndex(index);
+
+            // Unlike wheel events, touch gives us no native momentum after the
+            // finger lifts, so a quick flick would otherwise just stop dead and
+            // open whatever frame it happened to land on. Instead, hand off to
+            // an inertia animation seeded with the release velocity — it carries
+            // the strip on for a flicked distance (further for a faster flick,
+            // same as the trackpad) and modifyTarget snaps its resting point to
+            // the nearest frame, so exactly one photo opens once it settles.
+            animate(translateX, translateX.get(), {
+                type: "inertia",
+                velocity: translateX.getVelocity(),
+                min: -STRIP_MAX + STRIP_EXTRA,
+                max: STRIP_EXTRA,
+                modifyTarget: (v) => {
+                    const index = clamp(Math.round((STRIP_EXTRA - v) / FRAME_STEP), [0, FRAMES.length - 1]);
+                    return STRIP_EXTRA - index * FRAME_STEP;
+                },
+                onComplete: () => {
+                    const index = Math.round(
+                        clamp((STRIP_EXTRA - translateX.get()) / FRAME_STEP, [0, FRAMES.length - 1]),
+                    );
+                    setActiveIndex(index);
+                },
+            });
         }
 
         if (!isMobile) el.addEventListener("wheel", handleWheel, { passive: false });
@@ -450,8 +474,8 @@ export default function ScrollStrip({
                                     {frame.type === "video" ? (
                                         shouldLoadVideo ? (
                                             <video
-                                                src={frame.src}
-                                                poster={frame.poster}
+                                                src={`${mediaDir}/${frame.src}`}
+                                                poster={`${mediaDir}/${frame.poster}`}
                                                 className="pointer-events-none h-full w-full select-none object-cover"
                                                 autoPlay
                                                 loop
@@ -462,7 +486,7 @@ export default function ScrollStrip({
                                         ) : (
                                             // eslint-disable-next-line @next/next/no-img-element
                                             <img
-                                                src={frame.poster}
+                                                src={`${mediaDir}/${frame.poster}`}
                                                 alt=""
                                                 className="pointer-events-none h-full w-full select-none object-cover"
                                             />
@@ -470,7 +494,7 @@ export default function ScrollStrip({
                                     ) : (
                                         // eslint-disable-next-line @next/next/no-img-element
                                         <img
-                                            src={frame.src}
+                                            src={`${mediaDir}/${frame.src}`}
                                             alt=""
                                             className="pointer-events-none h-full w-full select-none object-cover"
                                         />
