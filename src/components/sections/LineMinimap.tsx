@@ -18,10 +18,9 @@ export const MAX = LINE_STEP * (LINE_COUNT - 1);
 export const DEFAULT_INTENSITY = 3.5;
 export const DISTANCE_LIMIT = 48;
 
-// Entrance timing: fires 1s after the (delayed) social links start revealing
-// in Hero. Shared by anything meant to appear alongside the minimap/ball
-// (the scroll hint, the hard-mode toggle).
-export const REVEAL_DELAY = 2.9;
+// Entrance timing: the minimap (and the mobile "use a computer" notice in
+// Hero) pop in 3s after everything else on the hero page.
+export const REVEAL_DELAY = 3;
 
 export function lerp(start: number, end: number, factor: number): number {
     return start + (end - start) * factor;

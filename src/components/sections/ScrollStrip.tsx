@@ -120,9 +120,9 @@ const FRAMES: FrameSource[] = [
 const LAZY_LOAD_WINDOW = 2;
 
 const NARRATIONS = [
-    "felt like lying down in the grass, looked up and saw this",
+    "under da trees",
     "most devoted bean tourists",
-    "squirrels getting too comfortable or maybe i smell odd",
+    "squirrels getting too comfortable or maybe i smell like acorns",
     "foggy night at a country club. those rays of light are from a streetlight",
     "2025 summer, holy setup",
     "night game at nd, never watched college football prior to this",
@@ -141,7 +141,7 @@ const NARRATIONS = [
     "the light breaks free from the clouds' holds",
     "i don't see anything at the end of that rainbow.",
     "time stood still here. i could've stayed here for hours",
-    "dream house honestly minus the mosquitoes",
+    "dream house minus the infinite mosquitoes",
     "glacier gardens in juneau",
     "sf at sunset",
     "sf at night",

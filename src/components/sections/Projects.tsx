@@ -59,15 +59,15 @@ const PROJECTS = [
     },
     {
         emoji: "🚕",
-        name: "app to make rideshare cheaper",
-        desc: "Coming soon.",
-        fullDesc: "Coming soon.",
-        tags: [] as string[],
+        name: "Down to Split",
+        desc: "Web app that helps students split the cost of airport rides with classmates.",
+        fullDesc:
+            "Down to Split is a web app that helps students split the cost of airport rides with classmates, built with Next.js and TypeScript on the frontend, and Supabase with PostgreSQL for a backend that syncs seat and luggage availability live across riders via Supabase Realtime. Tested with Vitest. Live at downtosplit.app.",
+        tags: ["Next.js", "TypeScript", "Supabase", "PostgreSQL", "Vitest"],
         bg: "#F5F0FF",
         accent: "#7C3AED",
-        links: {},
-        images: [] as string[],
-        disabled: true,
+        links: { live: "https://downtosplit.app" },
+        images: ["/projects/downtosplit_1.png", "/projects/downtosplit_2.png"],
     },
     {
         emoji: "⚙️",
