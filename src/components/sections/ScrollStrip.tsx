@@ -147,6 +147,61 @@ const NARRATIONS = [
     "sf at night",
 ];
 
+// Captions are all rendered stacked in the same spot and simply faded in/out,
+// rather than swapped via a keyed <AnimatePresence mode="wait">. That swap
+// could get permanently stuck on one caption when an exit finished on the
+// same frame the index changed again mid-scroll (AnimatePresence would mount
+// the next caption already flagged as exiting, so it never animated out).
+//
+// A caption only fades in once its frame has stayed in focus for
+// CAPTION_DWELL_MS. The old caption starts fading out the moment focus
+// leaves its frame, so as long as the dwell is at least as long as the fade,
+// the old one is fully gone before the new one starts — two captions are
+// never visible at once.
+const CAPTION_FADE = 0.35; // seconds
+const CAPTION_DWELL_MS = 400;
+
+// Returns `index` once it has held steady for `delay` ms, and null while it's
+// still changing.
+function useSettledIndex(index: number | null, delay: number) {
+    const [settled, setSettled] = React.useState(index);
+    React.useEffect(() => {
+        if (index === null) return;
+        const timeout = setTimeout(() => setSettled(index), delay);
+        return () => clearTimeout(timeout);
+    }, [index, delay]);
+    return settled === index ? index : null;
+}
+
+const captionVariants = {
+    // y resets to below once hidden, so the next fade-in rises up from
+    // underneath like the old enter animation did.
+    hidden: { opacity: 0, y: -5, transitionEnd: { y: 5 } },
+    shown: { opacity: 1, y: 0 },
+};
+
+function CaptionStack({ shownIndex, className }: { shownIndex: number | null; className?: string }) {
+    return (
+        // Every caption sits in the same grid cell, so the stack is as tall as
+        // the longest caption and they all share one anchor point.
+        <div className="grid">
+            {NARRATIONS.map((text, i) => (
+                <motion.p
+                    key={i}
+                    aria-hidden={shownIndex !== i}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={shownIndex === i ? "shown" : "hidden"}
+                    variants={captionVariants}
+                    transition={{ duration: CAPTION_FADE, ease: "easeInOut" }}
+                    className={`[grid-area:1/1] font-mono text-sm leading-relaxed text-(--muted) max-w-[260px] ${className ?? ""}`}
+                >
+                    {text}
+                </motion.p>
+            ))}
+        </div>
+    );
+}
+
 export default function ScrollStrip({
     progress,
     onActivate,
@@ -174,6 +229,8 @@ export default function ScrollStrip({
 
     const [activeIndex, setActiveIndex] = React.useState<null | number>(null);
     const [narrateIndex, setNarrateIndex] = React.useState(0);
+    const settledNarrateIndex = useSettledIndex(narrateIndex, CAPTION_DWELL_MS);
+    const settledActiveIndex = useSettledIndex(activeIndex, CAPTION_DWELL_MS);
     const [isInStrip, setIsInStrip] = React.useState(false);
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => setMounted(true), []);
@@ -436,18 +493,7 @@ export default function ScrollStrip({
                                 exit={{ opacity: 0 }}
                                 transition={{ duration: 0.5 }}
                             >
-                                <AnimatePresence mode="wait">
-                                    <motion.p
-                                        key={narrateIndex}
-                                        initial={{ opacity: 0, y: 5 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -5 }}
-                                        transition={{ duration: 0.35, ease: "easeInOut" }}
-                                        className="font-mono text-sm leading-relaxed text-(--muted) max-w-[260px]"
-                                    >
-                                        {NARRATIONS[narrateIndex]}
-                                    </motion.p>
-                                </AnimatePresence>
+                                <CaptionStack shownIndex={settledNarrateIndex} className="justify-self-end" />
                             </motion.div>
                         )}
                     </AnimatePresence>,
@@ -533,30 +579,9 @@ export default function ScrollStrip({
                     </motion.div>
                 </div>
                 {/* Below-lg narration — centered below the expanded frame */}
-                <AnimatePresence>
-                    {activeIndex !== null && (
-                        <motion.div
-                            className="lg:hidden absolute bottom-8 left-1/2 -translate-x-1/2 text-center pointer-events-none"
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -5 }}
-                            transition={{ duration: 0.35, ease: "easeInOut" }}
-                        >
-                            <AnimatePresence mode="wait">
-                                <motion.p
-                                    key={activeIndex}
-                                    initial={{ opacity: 0, y: 5 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -5 }}
-                                    transition={{ duration: 0.35, ease: "easeInOut" }}
-                                    className="font-mono text-sm leading-relaxed text-(--muted) max-w-[260px]"
-                                >
-                                    {NARRATIONS[activeIndex]}
-                                </motion.p>
-                            </AnimatePresence>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                <div className="lg:hidden absolute bottom-8 left-1/2 -translate-x-1/2 text-center pointer-events-none">
+                    <CaptionStack shownIndex={settledActiveIndex} className="self-end justify-self-center" />
+                </div>
             </div>
         </>
     );

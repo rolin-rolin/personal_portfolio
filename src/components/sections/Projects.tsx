@@ -16,8 +16,8 @@ const PROJECTS = [
         fullDesc:
             "Log15 is a full-stack desktop app built with Tauri and Rust on the backend, React + TypeScript on the frontend, and SQLite for local data persistence. It surfaces interactive time-tracking visualizations via Recharts and uses an automated daily archiving schema to keep data retrieval fast as logs grow.",
         tags: ["Tauri", "Rust", "React", "SQLite"],
-        bg: "#F0F0FF",
-        accent: "#6366F1",
+        bg: "#FFF7ED",
+        accent: "#F97316",
         links: { github: "https://github.com/rolin-rolin/log15" },
         images: ["/projects/log15_project.png"],
     },
@@ -28,8 +28,8 @@ const PROJECTS = [
         fullDesc:
             "OAPacks is a sports nutrition startup I co-founded and am currently bootstrapping. Generated first $625 in revenue within 3 days through 50 door-to-door sales attempts. Advanced in Notre Dame's McCloskey Startup Competition as the only freshman-led team among 180 entrants.",
         tags: ["Startup", "Sales", "Entrepreneurship"],
-        bg: "#FFF7ED",
-        accent: "#F97316",
+        bg: "#F0F9FF",
+        accent: "#0EA5E9",
         links: {},
         images: ["/projects/oapacks_project.png"],
     },
@@ -40,8 +40,8 @@ const PROJECTS = [
         fullDesc:
             "OARecs is a recommendation engine for OAPacks customers. A FastAPI backend runs PyTorch models and uses Chroma for vector similarity search to match users to ideal nutrition packs based on biometric data and taste preferences. The frontend is built with Next.js, TypeScript, and Tailwind.",
         tags: ["Next.js", "FastAPI", "PyTorch", "Chroma"],
-        bg: "#F0FFF4",
-        accent: "#16A34A",
+        bg: "#FFF7ED",
+        accent: "#F97316",
         links: { live: "https://oa-recs.vercel.app" },
         images: ["/projects/oarecs_project_1.png", "/projects/oarecs_project_2.png"],
     },
@@ -64,8 +64,8 @@ const PROJECTS = [
         fullDesc:
             "Down to Split is a web app that helps students split the cost of airport rides with classmates, built with Next.js and TypeScript on the frontend, and Supabase with PostgreSQL for a backend that syncs seat and luggage availability live across riders via Supabase Realtime. Tested with Vitest. Live at downtosplit.app.",
         tags: ["Next.js", "TypeScript", "Supabase", "PostgreSQL", "Vitest"],
-        bg: "#F5F0FF",
-        accent: "#7C3AED",
+        bg: "#FFF7ED",
+        accent: "#F97316",
         links: { live: "https://downtosplit.app" },
         images: ["/projects/downtosplit_1.png", "/projects/downtosplit_2.png"],
     },
@@ -75,8 +75,8 @@ const PROJECTS = [
         desc: "Coming soon.",
         fullDesc: "Coming soon.",
         tags: [] as string[],
-        bg: "#FFF0F2",
-        accent: "#FF4757",
+        bg: "#F0F9FF",
+        accent: "#0EA5E9",
         links: {},
         images: [] as string[],
         disabled: true,
@@ -365,24 +365,28 @@ export default function Projects({ scrollX }: { scrollX: MotionValue<number> }) 
                         </p>
                     </motion.div>
 
-                    {/* Detail panel slides in over the left column when a card is selected */}
-                    <AnimatePresence>
-                        {selectedIndex !== null && (
-                            <motion.div
-                                ref={detailRef}
-                                key={selectedIndex}
-                                className="absolute inset-[5%] lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-[90%] lg:aspect-[3/4] rounded-[22px] border-[2.5px] border-neutral-900 bg-white overflow-hidden z-10"
-                                initial={{ opacity: 0, scale: 0.97 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.97 }}
-                                transition={{ type: "spring", stiffness: 500, damping: 40, mass: 0.8 }}
-                                onWheel={(e) => e.stopPropagation()}
-                                onTouchMove={(e) => e.stopPropagation()}
-                            >
-                                <ProjectDetail project={PROJECTS[selectedIndex]} onClose={() => setSelectedIndex(null)} />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    {/* Detail panel slides in over the left column when a card is selected.
+                        detailRef lives on this always-mounted wrapper (display: contents, so no box)
+                        rather than the keyed panel: an exiting panel unmounts after its replacement
+                        mounts and would null the ref, breaking click-outside. */}
+                    <div ref={detailRef} className="contents">
+                        <AnimatePresence>
+                            {selectedIndex !== null && (
+                                <motion.div
+                                    key={selectedIndex}
+                                    className="absolute inset-[5%] lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-[90%] lg:aspect-[3/4] rounded-[22px] border-[2.5px] border-neutral-900 bg-white overflow-hidden z-10"
+                                    initial={{ opacity: 0, scale: 0.97 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.97 }}
+                                    transition={{ type: "spring", stiffness: 500, damping: 40, mass: 0.8 }}
+                                    onWheel={(e) => e.stopPropagation()}
+                                    onTouchMove={(e) => e.stopPropagation()}
+                                >
+                                    <ProjectDetail project={PROJECTS[selectedIndex]} onClose={() => setSelectedIndex(null)} />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
 
                 {/* Card stage — shown on all sizes, scales to fit */}
