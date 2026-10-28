@@ -21,20 +21,20 @@ const JOBS = [
     },
     {
         company: "PricewaterhouseCoopers",
+        role: "Deals Technology Intern",
+        period: "June 2026 — Aug. 2026",
+        bullets: [
+            "Shipped features to F500 client's Databricks app via Azure DevOps CI/CD.",
+            "Piecewise-linear risk scoring: cut overstated exposure $51M (18%).",
+        ],
+    },
+    {
+        company: "PricewaterhouseCoopers",
         role: "Technology and Data Solutions Intern",
         period: "June 2025 — Aug. 2025",
         bullets: [
             "Personalization algo for 7M+ users; 40% retention lift.",
             "Monte Carlo model: 2× revenue/employee uplift for client.",
-        ],
-    },
-    {
-        company: "Amazon",
-        role: "Product Management Extern",
-        period: "Jan. 2024 — April 2024",
-        bullets: [
-            "Surveys and A/B tests to surface pain points and features.",
-            "Prototyped Echo Show feature; presented to Amazon leadership.",
         ],
     },
 ];
@@ -244,7 +244,7 @@ export default function WorkExperience({ scrollX }: { scrollX: MotionValue<numbe
             </motion.div>
             <div className="flex flex-col gap-[clamp(1rem,3vw,2.5rem)] max-[480px]:gap-2">
                 {JOBS.map((job, i) => (
-                    <JobRow key={job.company} job={job} scrollX={scrollX} inputRange={JOB_RANGES[i]} />
+                    <JobRow key={job.role} job={job} scrollX={scrollX} inputRange={JOB_RANGES[i]} />
                 ))}
             </div>
 
